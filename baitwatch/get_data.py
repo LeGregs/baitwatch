@@ -1,7 +1,14 @@
 import tensorflow as tf
 import numpy as np
+from pathlib import Path
 
-def get_images(image_size =(256,256)):
+from baitwatch.settings import dataset_settings, preprocessing_settings
+
+
+def get_images(
+    directory_path: Path = dataset_settings.DATASET_PATH,
+    image_size: tuple[int, int] = (preprocessing_settings.PREPROCESS_IMG_SIZE, preprocessing_settings.PREPROCESS_IMG_SIZE),
+    ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
     Get images that are already splitted in test train val and send back them
     in format (N, (image_size), 3)
@@ -9,21 +16,26 @@ def get_images(image_size =(256,256)):
     image_size : size of images, (256, 256) by default
     3 : numbers of channels (RGB)
 
+    Args:
+        directory_path: path to dataset, must contain directories 'train', 'test' and 'val'
+        image_size: size to resize images to
+
     Returns : X_train, X_val, X_test
     """
 
     # image_dataset_from_directory récupère les images dans le directory
-    images_train = tf.keras.utils.image_dataset_from_directory("data/training_data_species_grouped/images/train",
+    images_train = tf.keras.utils.image_dataset_from_directory(directory_path / "train",
                                                             labels=None,
                                                             batch_size=None,
                                                             shuffle=False,
                                                             image_size=image_size)
-    images_test = tf.keras.utils.image_dataset_from_directory("data/training_data_species_grouped/images/test",
+    images_test = tf.keras.utils.image_dataset_from_directory(directory_path / "test",
                                                             labels=None,
                                                             batch_size=None,
                                                             shuffle=False,
                                                             image_size=image_size)
-    images_val = tf.keras.utils.image_dataset_from_directory("data/training_data_species_grouped/images/val",
+    images_val = tf.keras.utils.image_dataset_from_directory(directory_path / "valid",
+                                                            labels=None,
                                                             batch_size=None,
                                                             shuffle=False,
                                                             image_size=image_size)
@@ -31,22 +43,24 @@ def get_images(image_size =(256,256)):
     return images_train, images_val, images_test
 
 
-def get_labels():
+def get_labels(
+    directory_path: Path = dataset_settings.LABEL_PATH,
+    ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
     Get the labels of each images
 
     Returns : labels_train, labels_val, labels_test (Keras Dataset class)
     """
 
-    labels_train = tf.keras.utils.text_dataset_from_directory("data/training_data_species_grouped/labels/train",
+    labels_train = tf.keras.utils.text_dataset_from_directory(directory_path / "train",
                                                          labels=None,
                                                          batch_size=None,
                                                          shuffle=False)
-    labels_test = tf.keras.utils.text_dataset_from_directory("data/training_data_species_grouped/labels/test",
+    labels_test = tf.keras.utils.text_dataset_from_directory(directory_path / "test",
                                                          labels=None,
                                                          batch_size=None,
                                                          shuffle=False)
-    labels_val = tf.keras.utils.text_dataset_from_directory("data/training_data_species_grouped/labels/val",
+    labels_val = tf.keras.utils.text_dataset_from_directory(directory_path / "valid",
                                                          labels=None,
                                                          batch_size=None,
                                                          shuffle=False)
@@ -54,16 +68,19 @@ def get_labels():
     return labels_train, labels_val, labels_test
 
 
-def target_fonf():
+def target_fonf(
+    directory_path: Path = dataset_settings.LABEL_PATH,
+    ) -> tuple[np.array, np.array, np.array]:
     """
     Get the binary target "Fish Or No Fish" (fonf)
     If no labels : no fish = O
     If labels : fish = 1
 
-    returns the targets for train, val and test (arrays of 0 or 1)
+    Returns:
+        the targets for train, val and test (arrays of 0 and 1)
     """
 
-    labels_train, labels_val, labels_test = get_labels()
+    labels_train, labels_val, labels_test = get_labels(directory_path)
 
     # If there is no label, there is no fish (0)
     y_train = np.array([0 if txt == b'' else 1 \
