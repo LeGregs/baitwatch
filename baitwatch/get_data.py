@@ -1,4 +1,3 @@
-import pandas as pd
 import tensorflow as tf
 import numpy as np
 
@@ -29,12 +28,7 @@ def get_images(image_size =(256,256)):
                                                             shuffle=False,
                                                             image_size=image_size)
 
-    # Iterating through the dataset to create an array with data
-    X_train = np.array([image for image in images_train.as_numpy_iterator()])
-    X_test = np.array([image for image in images_test.as_numpy_iterator()])
-    X_val = np.array([image for image in images_val.as_numpy_iterator()])
-
-    return X_train, X_val, X_test
+    return images_train, images_val, images_test
 
 
 def get_labels():
