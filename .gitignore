@@ -223,5 +223,6 @@ __marimo__/
 
 # Project
 raw_data/
+processed_data/
 *.ipynb
 *.zip

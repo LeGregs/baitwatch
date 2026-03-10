@@ -12,7 +12,8 @@ reinstall_package:
 	@pip uninstall -y baitwatch || :
 	@pip install -e .
 
-update:
-	@git pull origin master
-	@git merge master
-	@pip install -r requirements.txt
+run_dl_data:
+	python -c 'from baitwatch.main import download_data; download_data()'
+
+run_preprocess:
+	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset()'

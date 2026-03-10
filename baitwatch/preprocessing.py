@@ -57,8 +57,8 @@ def contrast_enhance(img: np.array) -> np.array:
 
 # To be applied to a tf.data.Dataset using 'map',
 # see https://www.tensorflow.org/api_docs/python/tf/py_function
-@tf.py_func(Tout=tf.uint8)  # 8bit image
-def preprocess(eager_tensor: tf.python.framework.ops.EagerTensor) -> np.array:
+@tf.py_function(Tout=tf.uint8)  # 8bit image
+def preprocess(eager_tensor) -> np.array:
     """Full preprocessing pipeline for an image.
 
     Expected to be mapped to a ft.data.Dataset of EagerTensor.
