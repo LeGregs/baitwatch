@@ -7,6 +7,7 @@ from pydantic import DirectoryPath
 
 
 PROJECT_PATH = Path(__file__).absolute().parent.parent
+BUCKET_NAME = "baitwatch-bucket"
 
 
 class DatasetSettings(BaseSettings):
@@ -21,4 +22,3 @@ class PreprocessingSettings(BaseSettings):
 
 dataset_settings = DatasetSettings()
 preprocessing_settings = PreprocessingSettings()
-BUCKET_NAME = "baitwatch-bucket"

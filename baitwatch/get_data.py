@@ -1,17 +1,18 @@
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
-from os.path import isdir
+
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
 from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME
 
+
 def get_data(
     directory_path: Path = dataset_settings.DATASET_PATH
     ) -> None:
     """
-    Check if the data are there locally,
+    Check if there is data locally,
     otherwise download them from the bucket.
 
     Args: OPTIONAL
@@ -20,9 +21,12 @@ def get_data(
 
     No Return, only print
     """
+    datadir_path = directory_path / "training_data_species_grouped"
 
-    if isdir("raw_data/training_data_species_grouped/"):
+    if datadir_path.is_dir() and \
+        not list(datadir_path.iterdir()):
         print("✅ You already have the data downloaded in your computer !")
+
     else:
         print("✋ Load data from baitwatch-bucket...")
         local_filename = directory_path
