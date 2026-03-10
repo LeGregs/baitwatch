@@ -3,4 +3,6 @@ numpy==2.2.6
 pandas==2.3.3
 ipython==8.38.0
 pydantic_settings==2.13.1
+google-api-python-client # TO check if needed at final version
+google # To check if needed at final version
 opencv-python==4.13.0.92
