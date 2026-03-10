@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
-
+from PIL import Image
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
@@ -134,3 +134,18 @@ def get_target_fonf(
         for txt in labels_test.as_numpy_iterator() ])
 
     return y_train, y_val, y_test
+
+
+def save_image_dataset(
+    dataset: tf.data.Dataset,
+    path: Path,
+    ) -> None:
+    if not path.exists():
+        path.mkdir(parents=True)
+    if list(path.iterdir()):
+        print(f"Warning! Path {path} not empty, images will be rewritten.")
+    for index, tensor in enumerate(dataset):
+        # Cast into numpay array
+        numpy_image = tensor.numpy().astype("uint8")
+        image = Image.fromarray(numpy_image)
+        image.save(path / f"img_{index}.jpg")

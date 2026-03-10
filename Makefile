@@ -16,3 +16,6 @@ update:
 	@git pull origin master
 	@git merge master
 	@pip install -r requirements.txt
+
+run_preprocess:
+	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset()'
