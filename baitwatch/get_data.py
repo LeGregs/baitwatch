@@ -1,8 +1,42 @@
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
+from os.path import isdir
+from google.cloud import storage
+from google.cloud.storage import transfer_manager
 
-from baitwatch.settings import dataset_settings, preprocessing_settings
+from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME
+
+def get_data(
+    directory_path: Path = dataset_settings.DATASET_PATH
+    ) -> None:
+    """
+    Check if the data are there locally,
+    otherwise download them from the bucket.
+
+    Args: OPTIONAL
+        directory_path (Path, optional): _description_.
+        Defaults to dataset_settings.DATASET_PATH.
+
+    No Return, only print
+    """
+
+    if isdir("raw_data/training_data_species_grouped/"):
+        print("✅ You already have the data downloaded in your computer !")
+    else:
+        print("✋ Load data from baitwatch-bucket...")
+        local_filename = directory_path
+
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        #blob = bucket.blob(storage_filename)
+        blobs = [blob.name for blob in client.list_blobs("baitwatch-bucket", prefix="training_data_species_grouped")]
+        transfer_manager.download_many_to_path(bucket,
+                                               blobs,
+                                               destination_directory=local_filename,
+                                               skip_if_exists=True,
+                                               )
+        print("✅ You now have the data downloaded in your computer !")
 
 
 def get_images(

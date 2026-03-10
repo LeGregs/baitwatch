@@ -10,8 +10,9 @@ PROJECT_PATH = Path(__file__).absolute().parent.parent
 
 
 class DatasetSettings(BaseSettings):
-    DATASET_PATH: DirectoryPath = PROJECT_PATH / "raw_data/training_data_species_grouped/images/"
-    LABEL_PATH: DirectoryPath = PROJECT_PATH / "raw_data/training_data_species_grouped/labels/"
+    DATASET_PATH: DirectoryPath = PROJECT_PATH / "raw_data/"
+    #IMAGES_PATH: DirectoryPath = DATASET_PATH / "training_data_species_grouped/images/"
+    #LABEL_PATH: DirectoryPath = DATASET_PATH / "training_data_species_grouped/labels/"
 
 
 class PreprocessingSettings(BaseSettings):
@@ -20,3 +21,4 @@ class PreprocessingSettings(BaseSettings):
 
 dataset_settings = DatasetSettings()
 preprocessing_settings = PreprocessingSettings()
+BUCKET_NAME = "baitwatch-bucket"
