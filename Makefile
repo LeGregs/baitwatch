@@ -6,7 +6,7 @@ install_requirements:
 	@pip install -r requirements.txt
 
 install:
-	@pip install . -U -e
+	@pip install -e . -U
 
 reinstall_package:
 	@pip uninstall -y baitwatch || :
