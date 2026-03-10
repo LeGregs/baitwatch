@@ -222,7 +222,7 @@ __marimo__/
 *Zone.Identifier
 
 # Project
-raw_data/
-processed_data/
+raw_data/**
+processed_data/**
 *.ipynb
 *.zip
