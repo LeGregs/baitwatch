@@ -8,12 +8,11 @@ from pydantic import DirectoryPath
 
 PROJECT_PATH = Path(__file__).absolute().parent.parent
 BUCKET_NAME = "baitwatch-bucket"
+DATASET_NAME = "training_data_species_grouped"
 
 
 class DatasetSettings(BaseSettings):
-    DATASET_PATH: DirectoryPath = PROJECT_PATH / "raw_data/"
-    #IMAGES_PATH: DirectoryPath = DATASET_PATH / "training_data_species_grouped/images/"
-    #LABEL_PATH: DirectoryPath = DATASET_PATH / "training_data_species_grouped/labels/"
+    RAW_DATA_PATH: DirectoryPath = PROJECT_PATH / "raw_data"
 
 
 class PreprocessingSettings(BaseSettings):

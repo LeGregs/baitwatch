@@ -5,11 +5,11 @@ from pathlib import Path
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
-from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME
+from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
 
 
 def get_data(
-    directory_path: Path = dataset_settings.DATASET_PATH
+    directory_path: Path = dataset_settings.RAW_DATA_PATH
     ) -> None:
     """
     Check if there is data locally,
@@ -21,10 +21,10 @@ def get_data(
 
     No Return, only print
     """
-    datadir_path = directory_path / "training_data_species_grouped"
+    datadir_path = directory_path / DATASET_NAME
 
     if datadir_path.is_dir() and \
-        not list(datadir_path.iterdir()):
+        list(datadir_path.iterdir()):
         print("✅ You already have the data downloaded in your computer !")
 
     else:
@@ -44,7 +44,7 @@ def get_data(
 
 
 def get_images(
-    directory_path: Path = dataset_settings.DATASET_PATH,
+    directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
     image_size: tuple[int, int] = (preprocessing_settings.PREPROCESS_IMG_SIZE, preprocessing_settings.PREPROCESS_IMG_SIZE),
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
@@ -61,18 +61,21 @@ def get_images(
     Returns : X_train, X_val, X_test
     """
 
+    if not list(directory_path.iterdir()):
+        raise FileNotFoundError(f"No data found at {directory_path}")
+
     # image_dataset_from_directory récupère les images dans le directory
-    images_train = tf.keras.utils.image_dataset_from_directory(directory_path / "train",
+    images_train = tf.keras.utils.image_dataset_from_directory(directory_path / "images" / "train",
                                                             labels=None,
                                                             batch_size=None,
                                                             shuffle=False,
                                                             image_size=image_size)
-    images_test = tf.keras.utils.image_dataset_from_directory(directory_path / "test",
+    images_test = tf.keras.utils.image_dataset_from_directory(directory_path / "images" / "test",
                                                             labels=None,
                                                             batch_size=None,
                                                             shuffle=False,
                                                             image_size=image_size)
-    images_val = tf.keras.utils.image_dataset_from_directory(directory_path / "valid",
+    images_val = tf.keras.utils.image_dataset_from_directory(directory_path / "images" / "valid",
                                                             labels=None,
                                                             batch_size=None,
                                                             shuffle=False,
@@ -82,23 +85,25 @@ def get_images(
 
 
 def get_labels(
-    directory_path: Path = dataset_settings.LABEL_PATH,
+    directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
     Get the labels of each images
 
     Returns : labels_train, labels_val, labels_test (Keras Dataset class)
     """
+    if not list(directory_path.iterdir()):
+        raise FileNotFoundError(f"No data found at {directory_path}")
 
-    labels_train = tf.keras.utils.text_dataset_from_directory(directory_path / "train",
+    labels_train = tf.keras.utils.text_dataset_from_directory(directory_path / "labels" / "train",
                                                          labels=None,
                                                          batch_size=None,
                                                          shuffle=False)
-    labels_test = tf.keras.utils.text_dataset_from_directory(directory_path / "test",
+    labels_test = tf.keras.utils.text_dataset_from_directory(directory_path / "labels" / "test",
                                                          labels=None,
                                                          batch_size=None,
                                                          shuffle=False)
-    labels_val = tf.keras.utils.text_dataset_from_directory(directory_path / "valid",
+    labels_val = tf.keras.utils.text_dataset_from_directory(directory_path / "labels" / "valid",
                                                          labels=None,
                                                          batch_size=None,
                                                          shuffle=False)
@@ -107,7 +112,7 @@ def get_labels(
 
 
 def target_fonf(
-    directory_path: Path = dataset_settings.LABEL_PATH,
+    directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
     ) -> tuple[np.array, np.array, np.array]:
     """
     Get the binary target "Fish Or No Fish" (fonf)
