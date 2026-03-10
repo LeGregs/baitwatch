@@ -8,7 +8,7 @@ from google.cloud.storage import transfer_manager
 from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
 
 
-def get_data(
+def dl_data(
     directory_path: Path = dataset_settings.RAW_DATA_PATH
     ) -> None:
     """
@@ -111,7 +111,7 @@ def get_labels(
     return labels_train, labels_val, labels_test
 
 
-def target_fonf(
+def get_target_fonf(
     directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
     ) -> tuple[np.array, np.array, np.array]:
     """
