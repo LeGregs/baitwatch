@@ -14,7 +14,7 @@ DATASET_NAME = "training_data_species_grouped"
 class DatasetSettings(BaseSettings):
     RAW_DATA_PATH: DirectoryPath = PROJECT_PATH / "raw_data"
     PROCESSED_DATA_PATH: DirectoryPath = PROJECT_PATH / "processed_data"
-    ORIGINAL_SIZE: tuple[int, int] = (1920, 1080)
+    ORIGINAL_SIZE: tuple[int, int] = (1080, 1920)
 
 
 class PreprocessingSettings(BaseSettings):

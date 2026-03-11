@@ -159,29 +159,30 @@ def save_image_dataset(
     if list(path.iterdir()):
         print(f"Warning! Path {path} not empty, images will be rewritten.")
 
-    if labels is not None:
-        labels_shape = labels.shape
-        if labels_shape[0] != len(dataset):
+    # Dataset are not loaded files, len(dataset) would only return 1
+    len_dataset = dataset.cardinality().numpy()
+
+    if labels is None:
+        # Create an array of empty strings so no label directories are needed
+        labels = np.array(["" for _ in range(len_dataset)])
+    else:
+        # Must have as many labels as file in dataset
+        if labels.shape[0] != len_dataset:
             raise IndexError(
-                f"Labels and dataset do not have the same length! Labels: {labels_shape[0]}, dataset: {len(dataset)}"
+                f"Labels and dataset must have the same length! Labels: {labels.shape[0]}, dataset: {len_dataset}"
                 )
 
+        # Create directories for each label
         for label in np.unique(labels):
             label_path = path / str(label)
             if not label_path.exists():
                 label_path.mkdir(parents=True)
 
-        for index, (tensor, label) in enumerate(zip(dataset, labels)):
+    for index, (tensor, label) in enumerate(zip(dataset, labels)):
             # Cast into numpay array
             numpy_image = tensor.numpy().astype("uint8")
             image = Image.fromarray(numpy_image)
             image.save(path / str(label) / f"img_{index}.jpg")
-    else:
-        for index, tensor in enumerate(dataset):
-            # Cast into numpay array
-            numpy_image = tensor.numpy().astype("uint8")
-            image = Image.fromarray(numpy_image)
-            image.save(path / f"img_{index}.jpg")
 
 
 def get_processed_dataset(
