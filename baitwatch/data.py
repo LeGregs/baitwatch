@@ -47,7 +47,7 @@ def dl_data(
 
 def get_images(
     directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
-    image_size: tuple[int, int] = (preprocessing_settings.PREPROCESS_IMG_SIZE, preprocessing_settings.PREPROCESS_IMG_SIZE),
+    image_size: tuple[int, int] = dataset_settings.ORIGINAL_SIZE,
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
     Get images that are already splitted in test train val and send back them
@@ -183,3 +183,34 @@ def save_image_dataset(
             numpy_image = tensor.numpy().astype("uint8")
             image = Image.fromarray(numpy_image)
             image.save(path / f"img_{index}.jpg")
+
+
+def get_processed_dataset(
+    path: Path = dataset_settings.PROCESSED_DATA_PATH,
+    ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
+    """Load preprocessed images into tf.data.Dataset with labels.
+
+    Args:
+        path: path of preprocessed data, with train, val, test folders
+
+    Returns:
+        X_train_ds, X_val_ds, X_test_ds tf.data.Dataset
+    """
+
+    if not list(path.iterdir()):
+        raise FileNotFoundError(f"No data found at {path}")
+
+    X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
+                                                            labels="inferred",
+                                                            shuffle=True,
+                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+    X_val_ds = tf.keras.utils.image_dataset_from_directory(path / "val",
+                                                            labels="inferred",
+                                                            shuffle=True,
+                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+    X_test_ds = tf.keras.utils.image_dataset_from_directory(path / "test",
+                                                            labels="inferred",
+                                                            shuffle=True,
+                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+
+    return X_train_ds, X_val_ds, X_test_ds
