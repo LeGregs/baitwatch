@@ -1,6 +1,8 @@
+from pathlib import Path
+from typing import Optional
+
 import tensorflow as tf
 import numpy as np
-from pathlib import Path
 from PIL import Image
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
@@ -139,13 +141,45 @@ def get_target_fonf(
 def save_image_dataset(
     dataset: tf.data.Dataset,
     path: Path,
+    labels: Optional[np.array] = None,
     ) -> None:
+    """Save the dataset as JPEG images.
+
+    If labels is passed, the images are separated into different folder according
+    to the labels.
+    Labels MUST BE ordered accordingly to associate correctly the image in dataset.
+
+    Args:
+        dataset: dataset to save, must contain images
+        path: path to save dataset into
+        labels: (optional) labels to separate dataset into
+    """
     if not path.exists():
         path.mkdir(parents=True)
+
     if list(path.iterdir()):
         print(f"Warning! Path {path} not empty, images will be rewritten.")
-    for index, tensor in enumerate(dataset):
-        # Cast into numpay array
-        numpy_image = tensor.numpy().astype("uint8")
-        image = Image.fromarray(numpy_image)
-        image.save(path / f"img_{index}.jpg")
+
+    if labels is not None:
+        labels_shape = labels.shape
+        if labels_shape[0] != len(dataset):
+            raise IndexError(
+                f"Labels and dataset do not have the same length! Labels: {labels_shape[0]}, dataset: {len(dataset)}"
+                )
+
+        for label in np.unique(labels):
+            label_path = path / str(label)
+            if not label_path.exists():
+                label_path.mkdir(parents=True)
+
+        for index, (tensor, label) in enumerate(zip(dataset, labels)):
+            # Cast into numpay array
+            numpy_image = tensor.numpy().astype("uint8")
+            image = Image.fromarray(numpy_image)
+            image.save(path / str(label) / f"img_{index}.jpg")
+    else:
+        for index, tensor in enumerate(dataset):
+            # Cast into numpay array
+            numpy_image = tensor.numpy().astype("uint8")
+            image = Image.fromarray(numpy_image)
+            image.save(path / f"img_{index}.jpg")
