@@ -140,10 +140,13 @@ def save_image_dataset(
     dataset: tf.data.Dataset,
     path: Path,
     ) -> None:
+    """Save the (preprocessed) tf.Dataset."""
     if not path.exists():
         path.mkdir(parents=True)
+
     if list(path.iterdir()):
         print(f"Warning! Path {path} not empty, images will be rewritten.")
+
     for index, tensor in enumerate(dataset):
         # Cast into numpay array
         numpy_image = tensor.numpy().astype("uint8")

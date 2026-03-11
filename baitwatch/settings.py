@@ -5,7 +5,6 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 from pydantic import DirectoryPath
 
-__all__ = ["PROJECT_PATH", "BUCKET_NAME", "DATASET_NAME", "dataset_settings", "preprocessing_settings"]
 
 PROJECT_PATH = Path(__file__).absolute().parent.parent
 BUCKET_NAME = "baitwatch-bucket"
@@ -21,5 +20,10 @@ class PreprocessingSettings(BaseSettings):
     PREPROCESS_IMG_SIZE: int = 256
 
 
+class ModelSettings(BaseSettings):
+    MODEL_PATH: DirectoryPath = PROJECT_PATH / "model"
+
+
 dataset_settings = DatasetSettings()
 preprocessing_settings = PreprocessingSettings()
+model_settings = ModelSettings()
