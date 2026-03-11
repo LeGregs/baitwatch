@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
-from baitwatch.settings import preprocessing_settings
+
+from baitwatch.settings import preprocessing_settings, model_settings
 
 IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE
 
@@ -91,6 +94,49 @@ def train_model(model, X_train, y_train,
         callbacks=[early_stopping]       # arrête automatiquement si plateau
     )
     return history, model
+
+
+def save_model(
+    model: keras.Model,
+    path: Path = model_settings.MODEL_PATH
+) -> None:
+    """Save the given model in given path."""
+    print(f"⏳ Saving model at {path}...")
+    if not path.exists():
+        raise FileNotFoundError(f"Path or directory does not exists: {path}")
+    nb_model = len(list(path.iterdir())) + 1
+    model_name = f"model_{nb_model}.keras"
+    model.save(path / model_name)
+    print(f"✅ Model {model_name} saved at {path}")
+
+
+def load_model(
+    path: Path = model_settings.MODEL_PATH,
+    model_name: str = ""
+) -> keras.Model:
+    """Load the model.
+
+    If no model name is passed, return the last model in the path.
+    """
+    print(f"⏳ Loading model...")
+    if not path.exists():
+        raise FileNotFoundError(f"Path or directory does not exists: {path}")
+
+    models = [file_path for file_path in path.iterdir() if file_path.name.endswith(".keras")]
+    if not models :
+        raise FileNotFoundError(f"No keras model found at {path}")
+
+    if not model_name:
+        models.sort()
+        model_name = models[-1].name
+
+    if path / model_name not in models:
+        raise FileNotFoundError(f"Model {model_name} not found at {path}")
+
+    model = keras.models.load_model(path / model_name)
+    print(f"✅ Model {model_name} loaded")
+
+    return model
 
 
 if __name__ == '__main__':
