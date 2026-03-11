@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import tensorflow as tf
 import numpy as np
@@ -141,7 +140,7 @@ def get_target_fonf(
 def save_image_dataset(
     dataset: tf.data.Dataset,
     path: Path,
-    labels: Optional[np.array] = None,
+    labels: np.ndarray | None = None,
     ) -> None:
     """Save the dataset as JPEG images.
 

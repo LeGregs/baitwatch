@@ -1,9 +1,8 @@
-from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf
+from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess
 from baitwatch.model import build_model, compile_model, train_model, save_model, load_model
 from baitwatch.settings import dataset_settings, model_settings
 
-import numpy as np
 
 def download_data():
     """Download data locally."""
@@ -21,19 +20,16 @@ def preprocess_dataset():
     # Necessary to use tf.Dataset during training
     y_train, y_val, y_test = get_target_fonf()
 
-    save_image_dataset(imgs_train_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "train", labels=y_train)
-    save_image_dataset(imgs_val_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "val", labels=y_val)
-    save_image_dataset(imgs_test_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "test", labels=y_test)
+    save_image_dataset(imgs_train_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "train", labels=y_train)
+    save_image_dataset(imgs_val_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "val", labels=y_val)
+    save_image_dataset(imgs_test_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "test", labels=y_test)
 
 
 def train(model_type="fonf"):
-    imgs_train, imgs_val, _ = get_images()
-    y_train, y_val, _ = get_target_fonf()
-    imgs_train_preprocessed = np.array(list(imgs_train.map(preprocess).as_numpy_iterator()))
-    imgs_val_preprocessed = np.array(list(imgs_val.map(preprocess).as_numpy_iterator()))
+    X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     model = build_model()
-    model = compile_model(model, metrics=["accuracy", "recall", "precision", "AUC"])
-    history, model = train_model(model, imgs_train_preprocessed, y_train, imgs_val_preprocessed, y_val)
+    model = compile_model(model, optimizer="adam", metrics=["accuracy", "recall", "precision", "AUC"])
+    history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
     save_model(model, model_settings.MODEL_PATH / model_type)
     # TODO: use history
 
@@ -41,9 +37,7 @@ def train(model_type="fonf"):
 def evaluate(model_type="fonf"):
     model  = load_model(model_settings.MODEL_PATH / model_type)
 
-    _, _, imgs_test = get_images()
-    _, _, y_test = get_target_fonf()
+    _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
 
-    imgs_test_preprocessed = np.array(list(imgs_test.map(preprocess).as_numpy_iterator()))
-    results = model.evaluate(imgs_test_preprocessed, y_test, return_dict=True)
+    results = model.evaluate(X_test_ds, return_dict=True)
     print(results)

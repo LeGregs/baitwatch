@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import numpy as np
+from tensorflow.data import Dataset
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
@@ -13,7 +15,7 @@ def build_model():
     Instancie un CNN et renvoie le modèle
     """
     # Imput layer
-    inputs  = keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
+    inputs  = keras.Input(shape=(*IMG_SIZE, 3))
 
     # Hidden layers Conv
     x = layers.Conv2D(128, kernel_size=4, activation='relu')(inputs) # cherche des patterns
@@ -42,12 +44,12 @@ def compile_model(model,
     Compile le modèle
 
     Args :
-        model : le modèle à compiler
-        optimizer : choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
-        metrics : les métriques à suivre pendant l'entraînement
+        model: le modèle à compiler
+        optimizer: choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
+        metrics: les métriques à suivre pendant l'entraînement
 
     Returns :
-        model : le modèle compilé
+        model: le modèle compilé
     """
 
     model.compile(
@@ -58,26 +60,33 @@ def compile_model(model,
     return model
 
 
-def train_model(model, X_train, y_train,
-                X_val, y_val,
+def train_model(model,
+                *train_data: np.ndarray | Dataset,
+                validation_data: tuple[np.ndarray] | Dataset,
                 batch_size: int = 32,
                 epochs: int = 50,
-                patience: int = 5):
+                patience: int = 5,
+                ) -> tuple[dict, keras.Model]:
     """
     Entraîne le modèle et
     renvoie l'historique de l'entraînement et le modèle entraîné
 
+    Usage:
+        >>> history, model = train_model(model, X_train, y_train, validation_data=(X_val, y_val))
+
+        >>> history, model = train_model(model, X_train_dataset, validation_data=X_val_dataset)
+
     Args :
-        model : le modèle à entraîner
-        X_train, y_train : données d'entraînement
-        X_val, y_val : données de validation
-        batch_size : taille des batches
-        epochs : nombre maximum d'epochs
-        patience : nombre d'epochs sans amélioration avant d'arrêter
+        model: le modèle à entraîner
+        train_data: données d'entraînement
+        validation_data: données de validation
+        batch_size: taille des batches
+        epochs: nombre maximum d'epochs
+        patience: nombre d'epochs sans amélioration avant d'arrêter
 
     Returns :
-        history : historique de l'entraînement (loss, accuracy, etc.)
-        model : le modèle entraîné
+        history: historique de l'entraînement (loss, accuracy, etc.)
+        model: le modèle entraîné
     """
 
     early_stopping = EarlyStopping(
@@ -87,8 +96,8 @@ def train_model(model, X_train, y_train,
     )
 
     history = model.fit(
-        X_train, y_train,                # données d'entraînement
-        validation_data=(X_val, y_val),  # données de validation
+        *train_data,                     # données d'entraînement
+        validation_data=validation_data, # données de validation
         epochs=epochs,                   # maximum 50 epochs
         batch_size=batch_size,           # 32 images par batch
         callbacks=[early_stopping]       # arrête automatiquement si plateau
