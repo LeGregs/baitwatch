@@ -21,7 +21,7 @@ def preprocess_dataset():
     save_image_dataset(imgs_val_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "val")
 
 
-def train():
+def train(model_type="fonf"):
     imgs_train, imgs_val, _ = get_images()
     y_train, y_val, _ = get_target_fonf()
     imgs_train_preprocessed = np.array(list(imgs_train.map(preprocess).as_numpy_iterator()))
@@ -29,12 +29,12 @@ def train():
     model = build_model()
     model = compile_model(model, metrics=["accuracy", "recall", "precision", "AUC"])
     history, model = train_model(model, imgs_train_preprocessed, y_train, imgs_val_preprocessed, y_val)
-    save_model(model, model_settings.MODEL_PATH)
+    save_model(model, model_settings.MODEL_PATH / model_type)
     # TODO: use history
 
 
-def evaluate():
-    model  = load_model(model_settings.MODEL_PATH)
+def evaluate(model_type="fonf"):
+    model  = load_model(model_settings.MODEL_PATH / model_type)
 
     _, _, imgs_test = get_images()
     _, _, y_test = get_target_fonf()

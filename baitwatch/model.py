@@ -103,9 +103,9 @@ def save_model(
     """Save the given model in given path."""
     print(f"⏳ Saving model at {path}...")
     if not path.exists():
-        raise FileNotFoundError(f"Path or directory does not exists: {path}")
-    nb_model = len(list(path.iterdir())) + 1
-    model_name = f"model_{nb_model}.keras"
+        path.mkdir(parents=True)
+    model_num = len(list(path.iterdir())) + 1
+    model_name = f"model_{model_num}.keras"
     model.save(path / model_name)
     print(f"✅ Model {model_name} saved at {path}")
 
@@ -126,6 +126,7 @@ def load_model(
     if not models :
         raise FileNotFoundError(f"No keras model found at {path}")
 
+    # Get the last model when no name passed
     if not model_name:
         models.sort()
         model_name = models[-1].name
