@@ -17,3 +17,9 @@ run_dl_data:
 
 run_preprocess:
 	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset()'
+
+run_train:
+	python -c 'from baitwatch.main import train; train()'
+
+run_evaluate:
+	python -c 'from baitwatch.main import evaluate; evaluate()'
