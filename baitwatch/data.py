@@ -200,17 +200,20 @@ def get_processed_dataset(
     if not list(path.iterdir()):
         raise FileNotFoundError(f"No data found at {path}")
 
+    # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
+    image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
+
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+                                                            image_size=image_size)
     X_val_ds = tf.keras.utils.image_dataset_from_directory(path / "val",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+                                                            image_size=image_size)
     X_test_ds = tf.keras.utils.image_dataset_from_directory(path / "test",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+                                                            image_size=image_size)
 
     return X_train_ds, X_val_ds, X_test_ds
