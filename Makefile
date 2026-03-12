@@ -25,7 +25,7 @@ run_evaluate:
 	python -c 'from baitwatch.main import evaluate; evaluate()'
 
 run_cycle_fonf:
-	python -c 'from baitwatch.main import run_all; run_all("fonf")'
+	python -c 'from baitwatch.main import run_cycle; run_cycle("fonf")'
 
 run_report_fonf:
 	python -c 'from baitwatch.main import classification_report; classification_report("fonf")'

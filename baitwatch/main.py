@@ -46,11 +46,10 @@ def evaluate(model_type="fonf"):
 def classification_report(model_type:str = "fonf", model_name:str = "") -> None:
     model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
     _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
-    _, y_val, _ = get_target_fonf()
-    print(get_classification_report(model, X_val_ds, y_val))
+    print(get_classification_report(model, X_val_ds))
 
 
-def run_all(task_type: str = "fonf") -> None:
+def run_cycle(task_type: str = "fonf") -> None:
     download_data()
     preprocess_dataset()
     train(task_type)
