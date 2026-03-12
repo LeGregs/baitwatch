@@ -160,10 +160,18 @@ def get_classification_report(
     ) -> str:
     """Return classification report based on given validation data and model.
 
+    Usage:
+        >>> report = get_classification_report(model, dataset)  # With tf.Dataset including labels
+
+        >>> report = get_classification_report(model, X_train, y_train)  # With Numpy arrays
+
     Args:
         model: keras model to evaluate
         validation_data: either a tf.Dataset with labels or np.ndarray X_val, y_val
                          containing data to get classification report from
+
+    Returns:
+        classification report as strings (to be printed)
     """
     if len(validation_data) == 1 and isinstance(validation_data[0], Dataset):
         # Need to extract y_val as np.array for sklearn classification report
@@ -175,10 +183,12 @@ def get_classification_report(
             validation_images.append(tensor)
             labels.append(label)
 
+        # Iterator returns by batch, need concatenation to removed batch
         y_val = np.concatenate(labels, axis=0)
         X_val = np.concatenate(validation_images, axis=0)
 
     elif len(validation_data) == 1:
+        # Consider 2 args X_train and y_val as np.array
         X_val, y_val = validation_data
 
     else:
