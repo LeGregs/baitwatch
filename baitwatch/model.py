@@ -23,26 +23,35 @@ def build_model():
     x = keras.layers.Rescaling(scale=1./255)(inputs)
 
     # Hidden layers Conv
-    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", padding="same")(x)
-    x = layers.BatchNormalization(momentum=0.9)(x)
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
-    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", padding="same")(x)
-    x = layers.BatchNormalization(momentum=0.9)(x)
+
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
+
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform")(x)
-    x = layers.BatchNormalization(momentum=0.9)(x)
+
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
-    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform")(x)
-    x = layers.BatchNormalization(momentum=0.9)(x)
+
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
+
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform")(x)
-    x = layers.BatchNormalization(momentum=0.9)(x)
+
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
-    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform")(x)
-    x = layers.BatchNormalization(momentum=0.9)(x)
+
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
+
+    x = layers.MaxPooling2D((2,2))(x)
 
     # Hidden layers Dense
     x = layers.Flatten()(x)                                   # aplatit en 1D
