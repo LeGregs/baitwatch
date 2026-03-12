@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import tensorflow as tf
 import numpy as np
-from pathlib import Path
 from PIL import Image
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
@@ -45,7 +46,7 @@ def dl_data(
 
 def get_images(
     directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
-    image_size: tuple[int, int] = (preprocessing_settings.PREPROCESS_IMG_SIZE, preprocessing_settings.PREPROCESS_IMG_SIZE),
+    image_size: tuple[int, int] = dataset_settings.ORIGINAL_SIZE,
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
     Get images that are already splitted in test train val and send back them
@@ -139,16 +140,77 @@ def get_target_fonf(
 def save_image_dataset(
     dataset: tf.data.Dataset,
     path: Path,
+    labels: np.ndarray | None = None,
     ) -> None:
-    """Save the (preprocessed) tf.Dataset."""
+    """Save the dataset as JPEG images.
+
+    If labels is passed, the images are separated into different folder according
+    to the labels.
+    Labels MUST BE ordered accordingly to associate correctly the image in dataset.
+
+    Args:
+        dataset: dataset to save, must contain images
+        path: path to save dataset into
+        labels: (optional) labels to separate dataset into
+    """
     if not path.exists():
         path.mkdir(parents=True)
 
     if list(path.iterdir()):
         print(f"Warning! Path {path} not empty, images will be rewritten.")
 
-    for index, tensor in enumerate(dataset):
-        # Cast into numpay array
-        numpy_image = tensor.numpy().astype("uint8")
-        image = Image.fromarray(numpy_image)
-        image.save(path / f"img_{index}.jpg")
+    # Dataset are not loaded files, len(dataset) would only return 1
+    len_dataset = dataset.cardinality().numpy()
+
+    if labels is None:
+        # Create an array of empty strings so no label directories are needed
+        labels = np.array(["" for _ in range(len_dataset)])
+    else:
+        # Must have as many labels as file in dataset
+        if labels.shape[0] != len_dataset:
+            raise IndexError(
+                f"Labels and dataset must have the same length! Labels: {labels.shape[0]}, dataset: {len_dataset}"
+                )
+
+        # Create directories for each label
+        for label in np.unique(labels):
+            label_path = path / str(label)
+            if not label_path.exists():
+                label_path.mkdir(parents=True)
+
+    for index, (tensor, label) in enumerate(zip(dataset, labels)):
+            # Cast into numpay array
+            numpy_image = tensor.numpy().astype("uint8")
+            image = Image.fromarray(numpy_image)
+            image.save(path / str(label) / f"img_{index}.jpg")
+
+
+def get_processed_dataset(
+    path: Path = dataset_settings.PROCESSED_DATA_PATH,
+    ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
+    """Load preprocessed images into tf.data.Dataset with labels.
+
+    Args:
+        path: path of preprocessed data, with train, val, test folders
+
+    Returns:
+        X_train_ds, X_val_ds, X_test_ds tf.data.Dataset
+    """
+
+    if not list(path.iterdir()):
+        raise FileNotFoundError(f"No data found at {path}")
+
+    X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
+                                                            labels="inferred",
+                                                            shuffle=True,
+                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+    X_val_ds = tf.keras.utils.image_dataset_from_directory(path / "val",
+                                                            labels="inferred",
+                                                            shuffle=True,
+                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+    X_test_ds = tf.keras.utils.image_dataset_from_directory(path / "test",
+                                                            labels="inferred",
+                                                            shuffle=True,
+                                                            image_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+
+    return X_train_ds, X_val_ds, X_test_ds
