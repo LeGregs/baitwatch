@@ -56,6 +56,7 @@ def build_model():
     # Hidden layers Dense
     x = layers.Flatten()(x)                                   # aplatit en 1D
     x = layers.Dense(64, activation='relu')(x)
+    x = layers.Dropout(0.1)(x)
     x = layers.Dense(8, activation='relu')(x)                 # couche dense pour apprendre des combinaisons de features
 
     # Output layer
