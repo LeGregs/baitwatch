@@ -1,36 +1,43 @@
 from pathlib import Path
 
+import numpy as np
+from tensorflow.data import Dataset
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import classification_report
 
 from baitwatch.settings import preprocessing_settings, model_settings
 
-IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE
+# REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
+IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
 def build_model():
     """
-    Instancie un CNN et renvoie le modèle
+    Build a CNN model for fonf task.
     """
     # Imput layer
-    inputs  = keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
+    inputs  = keras.Input(shape=(*IMG_SIZE, 3))
 
     # Hidden layers Conv
-    x = layers.Conv2D(128, kernel_size=4, activation='relu')(inputs) # cherche des patterns
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01), padding="same")(inputs)
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01), padding="same")(x)
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(64, kernel_size=3, activation='relu')(x) # cherche des patterns
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(32, kernel_size=3, activation='relu')(x) # cherche des patterns
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
 
     # Hidden layers Dense
-    x = layers.Flatten()(x)                             # aplatit en 1D
-    x = layers.Dense(16, activation='relu')(x)
-    x = layers.Dense(8, activation='relu')(x)      # couche dense pour apprendre des combinaisons de features
+    x = layers.Flatten()(x)                                   # aplatit en 1D
+    x = layers.Dense(64, activation='relu')(x)
+    x = layers.Dense(8, activation='relu')(x)                 # couche dense pour apprendre des combinaisons de features
 
     # Output layer
     outputs = layers.Dense(1, activation='sigmoid')(x)        # probabilité fish
 
-    model   = keras.Model(inputs, outputs)                    # assemble les couches
+    model = keras.Model(inputs, outputs)                      # assemble les couches
 
     return model
 
@@ -42,12 +49,12 @@ def compile_model(model,
     Compile le modèle
 
     Args :
-        model : le modèle à compiler
-        optimizer : choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
-        metrics : les métriques à suivre pendant l'entraînement
+        model: le modèle à compiler
+        optimizer: choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
+        metrics: les métriques à suivre pendant l'entraînement
 
     Returns :
-        model : le modèle compilé
+        model: le modèle compilé
     """
 
     model.compile(
@@ -58,26 +65,33 @@ def compile_model(model,
     return model
 
 
-def train_model(model, X_train, y_train,
-                X_val, y_val,
+def train_model(model,
+                *train_data: np.ndarray | Dataset,
+                validation_data: tuple[np.ndarray] | Dataset,
                 batch_size: int = 32,
                 epochs: int = 50,
-                patience: int = 5):
+                patience: int = 5,
+                ) -> tuple[dict, keras.Model]:
     """
     Entraîne le modèle et
     renvoie l'historique de l'entraînement et le modèle entraîné
 
+    Usage:
+        >>> history, model = train_model(model, X_train, y_train, validation_data=(X_val, y_val))
+
+        >>> history, model = train_model(model, X_train_dataset, validation_data=X_val_dataset)
+
     Args :
-        model : le modèle à entraîner
-        X_train, y_train : données d'entraînement
-        X_val, y_val : données de validation
-        batch_size : taille des batches
-        epochs : nombre maximum d'epochs
-        patience : nombre d'epochs sans amélioration avant d'arrêter
+        model: le modèle à entraîner
+        train_data: données d'entraînement
+        validation_data: données de validation
+        batch_size: taille des batches
+        epochs: nombre maximum d'epochs
+        patience: nombre d'epochs sans amélioration avant d'arrêter
 
     Returns :
-        history : historique de l'entraînement (loss, accuracy, etc.)
-        model : le modèle entraîné
+        history: historique de l'entraînement (loss, accuracy, etc.)
+        model: le modèle entraîné
     """
 
     early_stopping = EarlyStopping(
@@ -87,8 +101,8 @@ def train_model(model, X_train, y_train,
     )
 
     history = model.fit(
-        X_train, y_train,                # données d'entraînement
-        validation_data=(X_val, y_val),  # données de validation
+        *train_data,                     # données d'entraînement
+        validation_data=validation_data, # données de validation
         epochs=epochs,                   # maximum 50 epochs
         batch_size=batch_size,           # 32 images par batch
         callbacks=[early_stopping]       # arrête automatiquement si plateau
@@ -126,9 +140,9 @@ def load_model(
     if not models :
         raise FileNotFoundError(f"No keras model found at {path}")
 
-    # Get the last model when no name passed
+    # Get the last model (creation date) when no name passed
     if not model_name:
-        models.sort()
+        models.sort(key=lambda model_path: model_path.stat().st_ctime)
         model_name = models[-1].name
 
     if path / model_name not in models:
@@ -138,6 +152,52 @@ def load_model(
     print(f"✅ Model {model_name} loaded")
 
     return model
+
+
+def get_classification_report(
+    model: keras.Model,
+    *validation_data: np.ndarray | Dataset,
+    ) -> str:
+    """Return classification report based on given validation data and model.
+
+    Usage:
+        >>> report = get_classification_report(model, dataset)  # With tf.Dataset including labels
+
+        >>> report = get_classification_report(model, X_train, y_train)  # With Numpy arrays
+
+    Args:
+        model: keras model to evaluate
+        validation_data: either a tf.Dataset with labels or np.ndarray X_val, y_val
+                         containing data to get classification report from
+
+    Returns:
+        classification report as strings (to be printed)
+    """
+    if len(validation_data) == 1 and isinstance(validation_data[0], Dataset):
+        # Need to extract y_val as np.array for sklearn classification report
+        validation_images = []
+        labels = []
+
+        # Only iterate ONCE ! Each iteration shuffles the dataset.
+        for tensor, label in validation_data[0].as_numpy_iterator():
+            validation_images.append(tensor)
+            labels.append(label)
+
+        # Iterator returns by batch, need concatenation to removed batch
+        y_val = np.concatenate(labels, axis=0)
+        X_val = np.concatenate(validation_images, axis=0)
+
+    elif len(validation_data) == 1:
+        # Consider 2 args X_train and y_val as np.array
+        X_val, y_val = validation_data
+
+    else:
+        raise ValueError("Need either a tf.Dataset with labels or np.ndarray X_val, y_val !")
+
+    # Model returns a probability of class 1 => round
+    y_pred = np.round(model.predict(X_val), 0)
+
+    return classification_report(y_val, y_pred)
 
 
 if __name__ == '__main__':

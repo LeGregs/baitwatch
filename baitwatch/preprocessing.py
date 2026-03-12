@@ -4,6 +4,8 @@ import numpy as np
 import cv2 as cv
 import tensorflow as tf
 
+from baitwatch.settings import preprocessing_settings
+
 
 def white_balance(img: np.array) -> np.array:
     """Apply an automatic white balance on image.
@@ -70,4 +72,7 @@ def preprocess(eager_tensor) -> np.array:
     white_balanced_img = white_balance(img)
     processed_img = contrast_enhance(white_balanced_img)
 
-    return processed_img
+    # Resize last in case it modifies too much for previous process
+    resized_img = cv.resize(processed_img, preprocessing_settings.PREPROCESS_IMG_SIZE, interpolation=cv.INTER_LINEAR)
+
+    return resized_img
