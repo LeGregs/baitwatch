@@ -5,6 +5,7 @@ from tensorflow.data import Dataset
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import classification_report
 
 from baitwatch.settings import preprocessing_settings, model_settings
 
@@ -135,9 +136,9 @@ def load_model(
     if not models :
         raise FileNotFoundError(f"No keras model found at {path}")
 
-    # Get the last model when no name passed
+    # Get the last model (creation date) when no name passed
     if not model_name:
-        models.sort()
+        models.sort(key=lambda model_path: model_path.stat().st_ctime)
         model_name = models[-1].name
 
     if path / model_name not in models:
@@ -147,6 +148,17 @@ def load_model(
     print(f"✅ Model {model_name} loaded")
 
     return model
+
+
+def get_classification_report(
+    model: keras.Model,
+    X_val: np.ndarray,
+    y_val: np.ndarray,
+    ) -> str:
+    """Return classification report based on given validation data and model."""
+    # Model returns a probability of class 1 => round
+    y_pred = np.round(model.predict(X_val), 0)
+    return classification_report(y_val, y_pred)
 
 
 if __name__ == '__main__':

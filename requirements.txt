@@ -12,3 +12,4 @@ google # To check if needed at final version
 google-cloud-storage
 opencv-python==4.13.0.92
 pillow==12.1.1
+scikit-learn==1.7.2
