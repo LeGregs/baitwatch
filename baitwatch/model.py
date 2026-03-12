@@ -12,22 +12,25 @@ IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE
 
 def build_model():
     """
-    Instancie un CNN et renvoie le modèle
+    Build a CNN model for fonf task.
     """
     # Imput layer
     inputs  = keras.Input(shape=(*IMG_SIZE, 3))
 
     # Hidden layers Conv
-    x = layers.Conv2D(128, kernel_size=4, activation='relu')(inputs) # cherche des patterns
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01), padding="same")(inputs)
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01), padding="same")(x)
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(64, kernel_size=3, activation='relu')(x) # cherche des patterns
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(32, kernel_size=3, activation='relu')(x) # cherche des patterns
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
 
     # Hidden layers Dense
-    x = layers.Flatten()(x)                             # aplatit en 1D
-    x = layers.Dense(16, activation='relu')(x)
-    x = layers.Dense(8, activation='relu')(x)      # couche dense pour apprendre des combinaisons de features
+    x = layers.Flatten()(x)                                   # aplatit en 1D
+    x = layers.Dense(64, activation='relu')(x)
+    x = layers.Dense(8, activation='relu')(x)                 # couche dense pour apprendre des combinaisons de features
 
     # Output layer
     outputs = layers.Dense(1, activation='sigmoid')(x)        # probabilité fish

@@ -75,4 +75,7 @@ def preprocess(eager_tensor) -> np.array:
     # Resize last in case it modifies too much for previous process
     resized_img = cv.resize(processed_img, preprocessing_settings.PREPROCESS_IMG_SIZE, interpolation=cv.INTER_LINEAR)
 
-    return resized_img
+    # Normalize
+    normalized_img = resized_img / 255
+
+    return normalized_img
