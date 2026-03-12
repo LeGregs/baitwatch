@@ -9,7 +9,8 @@ from sklearn.metrics import classification_report
 
 from baitwatch.settings import preprocessing_settings, model_settings
 
-IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE
+# REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
+IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
 def build_model():
     """
@@ -36,7 +37,7 @@ def build_model():
     # Output layer
     outputs = layers.Dense(1, activation='sigmoid')(x)        # probabilité fish
 
-    model   = keras.Model(inputs, outputs)                    # assemble les couches
+    model = keras.Model(inputs, outputs)                      # assemble les couches
 
     return model
 
@@ -155,12 +156,37 @@ def load_model(
 
 def get_classification_report(
     model: keras.Model,
-    X_val: np.ndarray,
-    y_val: np.ndarray,
+    *validation_data: np.ndarray | Dataset,
     ) -> str:
-    """Return classification report based on given validation data and model."""
+    """Return classification report based on given validation data and model.
+
+    Args:
+        model: keras model to evaluate
+        validation_data: either a tf.Dataset with labels or np.ndarray X_val, y_val
+                         containing data to get classification report from
+    """
+    if len(validation_data) == 1 and isinstance(validation_data[0], Dataset):
+        # Need to extract y_val as np.array for sklearn classification report
+        validation_images = []
+        labels = []
+
+        # Only iterate ONCE ! Each iteration shuffles the dataset.
+        for tensor, label in validation_data[0].as_numpy_iterator():
+            validation_images.append(tensor)
+            labels.append(label)
+
+        y_val = np.concatenate(labels, axis=0)
+        X_val = np.concatenate(validation_images, axis=0)
+
+    elif len(validation_data) == 1:
+        X_val, y_val = validation_data
+
+    else:
+        raise ValueError("Need either a tf.Dataset with labels or np.ndarray X_val, y_val !")
+
     # Model returns a probability of class 1 => round
     y_pred = np.round(model.predict(X_val), 0)
+
     return classification_report(y_val, y_pred)
 
 
