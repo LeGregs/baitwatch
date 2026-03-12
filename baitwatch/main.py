@@ -1,6 +1,6 @@
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess
-from baitwatch.model import build_model, compile_model, train_model, save_model, load_model
+from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report
 from baitwatch.settings import dataset_settings, model_settings
 
 
@@ -41,3 +41,16 @@ def evaluate(model_type="fonf"):
 
     results = model.evaluate(X_test_ds, return_dict=True)
     print(results)
+
+
+def classification_report(model_type:str = "fonf", model_name:str = "") -> None:
+    model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
+    _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
+    print(get_classification_report(model, X_val_ds))
+
+
+def run_cycle(task_type: str = "fonf") -> None:
+    download_data()
+    preprocess_dataset()
+    train(task_type)
+    classification_report(task_type)

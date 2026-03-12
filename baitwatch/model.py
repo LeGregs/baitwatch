@@ -5,10 +5,12 @@ from tensorflow.data import Dataset
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import classification_report
 
 from baitwatch.settings import preprocessing_settings, model_settings
 
-IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE
+# REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
+IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
 def build_model():
     """
@@ -35,7 +37,7 @@ def build_model():
     # Output layer
     outputs = layers.Dense(1, activation='sigmoid')(x)        # probabilité fish
 
-    model   = keras.Model(inputs, outputs)                    # assemble les couches
+    model = keras.Model(inputs, outputs)                      # assemble les couches
 
     return model
 
@@ -138,9 +140,9 @@ def load_model(
     if not models :
         raise FileNotFoundError(f"No keras model found at {path}")
 
-    # Get the last model when no name passed
+    # Get the last model (creation date) when no name passed
     if not model_name:
-        models.sort()
+        models.sort(key=lambda model_path: model_path.stat().st_ctime)
         model_name = models[-1].name
 
     if path / model_name not in models:
@@ -150,6 +152,52 @@ def load_model(
     print(f"✅ Model {model_name} loaded")
 
     return model
+
+
+def get_classification_report(
+    model: keras.Model,
+    *validation_data: np.ndarray | Dataset,
+    ) -> str:
+    """Return classification report based on given validation data and model.
+
+    Usage:
+        >>> report = get_classification_report(model, dataset)  # With tf.Dataset including labels
+
+        >>> report = get_classification_report(model, X_train, y_train)  # With Numpy arrays
+
+    Args:
+        model: keras model to evaluate
+        validation_data: either a tf.Dataset with labels or np.ndarray X_val, y_val
+                         containing data to get classification report from
+
+    Returns:
+        classification report as strings (to be printed)
+    """
+    if len(validation_data) == 1 and isinstance(validation_data[0], Dataset):
+        # Need to extract y_val as np.array for sklearn classification report
+        validation_images = []
+        labels = []
+
+        # Only iterate ONCE ! Each iteration shuffles the dataset.
+        for tensor, label in validation_data[0].as_numpy_iterator():
+            validation_images.append(tensor)
+            labels.append(label)
+
+        # Iterator returns by batch, need concatenation to removed batch
+        y_val = np.concatenate(labels, axis=0)
+        X_val = np.concatenate(validation_images, axis=0)
+
+    elif len(validation_data) == 1:
+        # Consider 2 args X_train and y_val as np.array
+        X_val, y_val = validation_data
+
+    else:
+        raise ValueError("Need either a tf.Dataset with labels or np.ndarray X_val, y_val !")
+
+    # Model returns a probability of class 1 => round
+    y_pred = np.round(model.predict(X_val), 0)
+
+    return classification_report(y_val, y_pred)
 
 
 if __name__ == '__main__':
