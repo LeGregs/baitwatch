@@ -29,7 +29,7 @@ def preprocess_dataset():
     save_image_dataset(imgs_test_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "test", labels=y_test)
 
 
-def train(model_type="fonf"):
+def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     model = build_model()
 
@@ -42,7 +42,7 @@ def train(model_type="fonf"):
     plot_history(history)
 
 
-def evaluate(model_type="fonf"):
+def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     model  = load_model(model_settings.MODEL_PATH / model_type)
 
     _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
@@ -51,13 +51,13 @@ def evaluate(model_type="fonf"):
     print(results)
 
 
-def classification_report(model_type:str = "fonf", model_name:str = "") -> None:
+def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name:str = "") -> None:
     model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
     _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     print(get_classification_report(model, X_val_ds))
 
 
-def run_cycle(task_type: str = "fonf") -> None:
+def run_cycle(task_type: FishDetectionEnum = FishDetectionEnum.FONF) -> None:
     download_data()
     preprocess_dataset()
     train(task_type)
