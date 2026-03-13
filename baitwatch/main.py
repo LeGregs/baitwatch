@@ -38,12 +38,12 @@ def train(model_type="fonf"):
 
     model = compile_model(model, optimizer=optimizer, metrics=["accuracy", "recall", "precision", "AUC"])
     history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
-    save_model(model, model_settings.MODEL_PATH / model_type)
+    save_model(model, model_type, model_settings.MODEL_LOCAL_PATH)
     plot_history(history)
 
 
 def evaluate(model_type="fonf"):
-    model  = load_model(model_settings.MODEL_PATH / model_type)
+    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
 
     _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
 
@@ -52,7 +52,7 @@ def evaluate(model_type="fonf"):
 
 
 def classification_report(model_type:str = "fonf", model_name:str = "") -> None:
-    model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
+    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
     _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     print(get_classification_report(model, X_val_ds))
 
