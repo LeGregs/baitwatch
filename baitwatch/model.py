@@ -67,6 +67,14 @@ def build_model():
     return model
 
 
+def fonf_optimizer() -> keras.optimizers.Optimizer:
+    """Optimizer for FONF training."""
+    # For fonf, use an adaptative learning rate to ensure reliability of train
+    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 200, 0.96)
+    optimizer = keras.optimizers.Adam(learning_rate=lr)
+    return optimizer
+
+
 def compile_model(model,
                   optimizer='rmsprop',
                   metrics=['accuracy']):

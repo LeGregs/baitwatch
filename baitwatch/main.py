@@ -3,7 +3,7 @@ from tensorflow.data import AUTOTUNE
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess
-from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report
+from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
 from baitwatch.plot_history import plot_history
 from baitwatch.settings import dataset_settings, model_settings
 
@@ -33,9 +33,8 @@ def train(model_type="fonf"):
     X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     model = build_model()
 
-    # For fonf, use an adaptative learning rate to ensure reliability of train
-    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 200, 0.96)
-    optimizer = keras.optimizers.Adam(learning_rate=lr)
+    # TODO: optimizer for every model type.
+    optimizer = fonf_optimizer()
 
     model = compile_model(model, optimizer=optimizer, metrics=["accuracy", "recall", "precision", "AUC"])
     history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
