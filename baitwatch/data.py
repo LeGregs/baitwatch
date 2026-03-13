@@ -217,3 +217,40 @@ def get_processed_dataset(
                                                             image_size=image_size)
 
     return X_train_ds, X_val_ds, X_test_ds
+
+def save_augmented_to_local(dataset: tf.data.Dataset,
+                            path: Path = dataset_settings.AUGMENTED_DATA_PATH):
+    """
+    Parcourt le dataset, applique l'augmentation, et écrit sur le disque.
+    """
+    # Création du dossier augmented_data à côté de raw_data
+    if not path.exists():
+        path.mkdir(parents=True)
+        print(f"📁 Nouveau dossier créé : {path}")
+
+    if any(path.iterdir()):
+        print(f"⚠️ Le dossier {path} n'est pas vide, pas besoin de télécharger!")
+        return
+
+    print("🚀 Sauvegarde du dataset augmenté en local...")
+
+    # On itère sur le dataset (image_tensor, label_tensor)
+    for index, (img_tensor, label_tensor) in enumerate(dataset):
+
+        # SAUVEGARDE IMAGE
+        img_np = img_tensor.numpy().astype("uint8")
+        image = Image.fromarray(img_np)
+        img_file = path / f"fish_{index}.png"
+        image.save(img_file)
+
+        # SAUVEGARDE LABEL
+        # On extrait les valeurs [class, x, y, w, h]
+        label_data = label_tensor.numpy()
+        # On prépare la ligne format YOLO : "0 0.5 0.5 0.2 0.2"
+        label_line = " ".join([f"{x:.6f}" if i > 0 else f"{int(x)}" for i, x in enumerate(label_data)])
+
+        txt_file = path / f"fish_{index}.txt"
+        # Syntaxe Pathlib pour écrire du texte sans ouvrir de context manager complexe
+        txt_file.write_text(label_line)
+
+    print(f"✅ Terminé ! {index + 1} couples images/labels sauvegardés.")
