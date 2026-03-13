@@ -1,6 +1,7 @@
 """Project Settings"""
 
 from pathlib import Path
+from enum import Enum
 
 from pydantic_settings import BaseSettings
 from pydantic import DirectoryPath
@@ -9,6 +10,14 @@ from pydantic import DirectoryPath
 PROJECT_PATH = Path(__file__).absolute().parent.parent
 BUCKET_NAME = "baitwatch-bucket"
 DATASET_NAME = "training_data_species_grouped"
+
+
+class FishDetectionEnum(str, Enum):
+    """Supported type of fish detection.
+
+    FONF: Fish Or No Fish
+    """
+    FONF = "fonf"
 
 
 class DatasetSettings(BaseSettings):

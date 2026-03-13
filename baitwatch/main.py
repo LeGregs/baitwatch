@@ -1,11 +1,11 @@
-from tensorflow import keras
+from PIL import Image
 from tensorflow.data import AUTOTUNE
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess
 from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
 from baitwatch.plot_history import plot_history
-from baitwatch.settings import dataset_settings, model_settings
+from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
 
 
 def download_data():
@@ -29,7 +29,7 @@ def preprocess_dataset():
     save_image_dataset(imgs_test_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "test", labels=y_test)
 
 
-def train(model_type="fonf"):
+def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     model = build_model()
 
@@ -42,7 +42,7 @@ def train(model_type="fonf"):
     plot_history(history)
 
 
-def evaluate(model_type="fonf"):
+def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     model  = load_model(model_settings.MODEL_PATH / model_type)
 
     _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
@@ -51,14 +51,21 @@ def evaluate(model_type="fonf"):
     print(results)
 
 
-def classification_report(model_type:str = "fonf", model_name:str = "") -> None:
+def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name:str = "") -> None:
     model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
     _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     print(get_classification_report(model, X_val_ds))
 
 
-def run_cycle(task_type: str = "fonf") -> None:
+def run_cycle(task_type: FishDetectionEnum = FishDetectionEnum.FONF) -> None:
     download_data()
     preprocess_dataset()
     train(task_type)
     classification_report(task_type)
+
+
+def detect_fishes(detection_type: FishDetectionEnum, image: Image) -> None:
+    # Perform preprocessing
+
+    # Perform detection
+    return
