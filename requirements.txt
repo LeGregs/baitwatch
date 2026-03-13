@@ -2,7 +2,30 @@
 tensorflow==2.21.0; sys_platform == 'darwin' and 'ARM' in platform_version # Mac M-chips
 tensorflow==2.21.0; sys_platform == 'darwin' and 'ARM' not in platform_version # Mac Intel chips
 tensorflow==2.21.0; sys_platform != 'darwin' # Windows & Ubuntu Intel chips
+fastapi==0.135.1
+uvicorn==0.41.0
+python-multipart==0.0.22
+scikit-learn==1.7.2
+google==3.0.0
+google-api-core==2.30.0
+google-api-python-client==2.192.0
+google-auth==2.49.0
+google-auth-httplib2==0.3.0
+google-cloud==0.34.0
+google-cloud-core==2.5.0
+google-cloud-storage==3.9.0
+google-crc32c==1.8.0
+google-pasta==0.2.0
+google-resumable-media==2.8.0
+googleapis-common-protos==1.73.0
+matplotlib==3.10.8
+pillow==12.1.1
+numpy==2.2.6
+pydantic==2.12.5
+pydantic-settings==2.13.1
+opencv-python==4.13.0.92
 
+# Other reqs for dev
 absl-py==2.4.0
 annotated-types==0.7.0
 anyio==4.12.1
@@ -36,18 +59,6 @@ flatbuffers==25.12.19
 fonttools==4.61.1
 fqdn==1.5.1
 gast==0.7.0
-google==3.0.0
-google-api-core==2.30.0
-google-api-python-client==2.192.0
-google-auth==2.49.0
-google-auth-httplib2==0.3.0
-google-cloud==0.34.0
-google-cloud-core==2.5.0
-google-cloud-storage==3.9.0
-google-crc32c==1.8.0
-google-pasta==0.2.0
-google-resumable-media==2.8.0
-googleapis-common-protos==1.73.0
 grpcio==1.78.0
 h11==0.16.0
 h5py==3.14.0
@@ -83,7 +94,6 @@ lark==1.3.1
 libclang==18.1.1
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
-matplotlib==3.10.8
 matplotlib-inline==0.2.1
 mccabe==0.7.0
 mdurl==0.1.2
@@ -95,8 +105,6 @@ nbconvert==7.17.0
 nbformat==5.10.4
 nest-asyncio==1.6.0
 notebook_shim==0.2.4
-numpy==2.2.6
-opencv-python==4.13.0.92
 opt_einsum==3.4.0
 optree==0.19.0
 overrides==7.7.0
@@ -105,7 +113,6 @@ pandas==2.3.3
 pandocfilters==1.5.1
 parso==0.8.6
 pexpect==4.9.0
-pillow==12.1.1
 platformdirs==4.9.4
 pluggy==1.6.0
 prometheus_client==0.24.1
@@ -118,8 +125,6 @@ pure_eval==0.2.3
 pyasn1==0.6.2
 pyasn1_modules==0.4.2
 pycparser==3.0
-pydantic==2.12.5
-pydantic-settings==2.13.1
 pydantic_core==2.41.5
 Pygments==2.19.2
 pylint==4.0.5
@@ -139,7 +144,6 @@ rfc3987-syntax==1.1.0
 rich==14.3.3
 rpds-py==0.30.0
 rsa==4.9.1
-scikit-learn==1.7.2
 scipy==1.15.3
 seaborn==0.13.2
 Send2Trash==2.1.0
@@ -165,6 +169,3 @@ webcolors==25.10.0
 webencodings==0.5.1
 websocket-client==1.9.0
 wrapt==2.1.2
-fastapi==0.135.1
-uvicorn==0.41.0
-python-multipart==0.0.22
