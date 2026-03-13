@@ -19,15 +19,25 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown: Clean up resources
 
-app = FastAPI(lifespan=lifespan)
+
+app = FastAPI(
+    lifespan=lifespan,
+    title="Baitwatch API",
+    description="Project to detect fishes in photographs.",
+    version="1.0.0",
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+)
 
 
 @app.post("/detect-fishes/")
 async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> None:
     """Request a fish detection on given image, according to the detection type.
 
-    - detection_type (FishDetectionEnum): Type of detection to use.
-    - image_file (UploadFile): image to detect fishes from.
+    - **detection_type** (FishDetectionEnum): Type of detection to use.
+    - **image_file** (UploadFile): image to detect fishes from.
     - Returns: Nothing for now
     """
     contents = await image_file.read()
