@@ -152,3 +152,63 @@ def save_image_dataset(
         numpy_image = tensor.numpy().astype("uint8")
         image = Image.fromarray(numpy_image)
         image.save(path / f"img_{index}.jpg")
+
+
+def get_augmented_images(
+    directory_path: Path = dataset_settings.RAW_DATA_PATH,
+    image_size: tuple[int, int] = (preprocessing_settings.PREPROCESS_IMG_SIZE, preprocessing_settings.PREPROCESS_IMG_SIZE),
+    folders: list = None,
+    ) -> tf.data.Dataset:
+    """
+    Charge les images augmentées depuis le local.
+    Si elles ne sont pas disponibles, les télécharge depuis le bucket d'abord.
+
+    Args :
+        directory_path : chemin local vers raw_data/
+        image_size     : taille des images
+        folders        : liste des dossiers à charger (défaut : back_sub uniquement)
+
+    Returns :
+        dataset combiné de toutes les images augmentées train
+    """
+
+    if folders is None:
+        folders = ['back_sub_td_400_li_500_r']  # back_sub par défaut
+
+    augmented_path = directory_path / 'augmented_images'
+
+    # ── Télécharge si pas en local ────────────────────────
+    if not augmented_path.is_dir() or not [f for f in augmented_path.iterdir() if not f.name.startswith('.')]:
+        print("✋ Augmented data not found, downloading from bucket...")
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blobs  = [blob.name for blob in client.list_blobs(BUCKET_NAME, prefix="augmented_images")]
+        transfer_manager.download_many_to_path(
+            bucket,
+            blobs,
+            destination_directory=directory_path,
+            skip_if_exists=True,
+        )
+        print("✅ Augmented data downloaded !")
+
+    # ── Charge depuis le local ────────────────────────────
+    datasets = []
+    print("✅ You already have the augmented data !")
+
+    # for folder in folders:
+    #     folder_path = augmented_path / folder / 'images' / 'train'
+    #     ds = tf.keras.utils.image_dataset_from_directory(
+    #         folder_path,
+    #         labels=None,
+    #         batch_size=None,
+    #         shuffle=False,
+    #         image_size=image_size
+    #     )
+    #     datasets.append(ds)
+    #     print(f'✅ {folder} chargé')
+
+    # combined = datasets[0]
+    # for ds in datasets[1:]:
+    #     combined = combined.concatenate(ds)
+
+    # return combined
