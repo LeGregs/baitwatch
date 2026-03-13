@@ -1,7 +1,9 @@
+from PIL import Image
+
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess
 from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report
-from baitwatch.settings import dataset_settings, model_settings
+from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
 
 
 def download_data():
@@ -54,3 +56,10 @@ def run_cycle(task_type: str = "fonf") -> None:
     preprocess_dataset()
     train(task_type)
     classification_report(task_type)
+
+
+def detect_fishes(detection_type: FishDetectionEnum, image: Image) -> None:
+    # Perform preprocessing
+
+    # Perform detection
+    return
