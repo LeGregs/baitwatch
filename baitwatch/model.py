@@ -19,19 +19,44 @@ def build_model():
     # Imput layer
     inputs  = keras.Input(shape=(*IMG_SIZE, 3))
 
+    # Normalize images
+    x = keras.layers.Rescaling(scale=1./255)(inputs)
+
     # Hidden layers Conv
-    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01), padding="same")(inputs)
-    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01), padding="same")(x)
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+
+    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
-    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
+
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+
     x = layers.MaxPooling2D((2,2))(x)
-    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
-    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", activation=layers.LeakyReLU(negative_slope=0.01))(x)
+
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.BatchNormalization(momentum=0.99)(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+
+    x = layers.MaxPooling2D((2,2))(x)
 
     # Hidden layers Dense
     x = layers.Flatten()(x)                                   # aplatit en 1D
     x = layers.Dense(64, activation='relu')(x)
+    x = layers.Dropout(0.1)(x)
     x = layers.Dense(8, activation='relu')(x)                 # couche dense pour apprendre des combinaisons de features
 
     # Output layer
@@ -40,6 +65,14 @@ def build_model():
     model = keras.Model(inputs, outputs)                      # assemble les couches
 
     return model
+
+
+def fonf_optimizer() -> keras.optimizers.Optimizer:
+    """Optimizer for FONF training."""
+    # For fonf, use an adaptative learning rate to ensure reliability of train
+    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 200, 0.96)
+    optimizer = keras.optimizers.Adam(learning_rate=lr)
+    return optimizer
 
 
 def compile_model(model,
