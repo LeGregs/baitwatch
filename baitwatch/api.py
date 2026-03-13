@@ -1,8 +1,8 @@
 """Web API."""
+import io
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile
 from PIL import Image
-import io
 
 from baitwatch.settings import FishDetectionEnum
 from baitwatch.main import detect_fishes
@@ -23,7 +23,7 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/detect-fishes/")
-async def detect_fishes(detection_type: FishDetectionEnum, image_file: UploadFile) -> None:
+async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> None:
     """Request a fish detection on given image, according to the detection type.
 
     Args:
