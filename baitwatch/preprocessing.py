@@ -107,7 +107,11 @@ def preprocess(eager_tensor) -> np.array:
     return resized_img
 
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
-    """Multiplie le dataset en adaptant les Bounding Boxes."""
+    """Multiplie le dataset en adaptant les lables des Bounding Boxes.
+
+    Opérations : Flip Left to Right, Flip Up to Down, Rotation 180°
+                 Brightness diff, Contrast diff, Saturation diff, Noise Addition.
+    """
 
     def _augment(img, label):
 
@@ -122,10 +126,10 @@ def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
         img_st = tf.cast(tf.image.random_saturation(img, lower=0.0, upper=4.0), tf.uint8)
         img_ns = add_noise(img)
 
-        # On renvoie uniquement les 7 variantes (L'originale est déjà dans le dataset train de base)
+        # On renvoie l'image originale et les 7 variantes
         aug_imgs = [img, img_lr, img_ud, img_180, img_br, img_ct, img_st, img_ns]
         aug_labs = [label, lab_lr, lab_ud, lab_180, label, label, label, label]
 
         return tf.data.Dataset.from_tensor_slices((aug_imgs, aug_labs))
 
-    return dataset.flat_map(_augment)
+    return dataset.map(_augment)

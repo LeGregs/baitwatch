@@ -218,23 +218,37 @@ def get_processed_dataset(
 
     return X_train_ds, X_val_ds, X_test_ds
 
-def save_augmented_to_local(dataset: tf.data.Dataset,
-                            path: Path = dataset_settings.AUGMENTED_DATA_PATH):
+def save_augmented_to_local(dataset: tf.data.Dataset, path: Path):
     """
-    Parcourt le dataset, applique l'augmentation, et écrit sur le disque.
+    Export an augmented dataset to local storage in YOLO format (PNG + TXT).
+
+    This function iterates through a pre-shuffled augmented dataset and saves each
+    image-label pair. If the destination directory already contains data, the
+    process is aborted to prevent redundant computation and storage.
+
+    Args:
+        dataset: A tf.data.Dataset yielding tuples of (image_tensor, label_tensor).
+                 Labels must follow the [class, x_c, y_c, w, h] format.
+        path: Pathlib object pointing to the destination directory.
+              Defaults to dataset_settings.AUGMENTED_DATA_PATH.
+
+    Output:
+        - PNG images (8-bit) named 'fish_{index}.png'
+        - TXT files named 'fish_{index}.txt' containing normalized YOLO coordinates.
     """
-    # Création du dossier augmented_data à côté de raw_data
+        # 1. Dossier de destination
     if not path.exists():
         path.mkdir(parents=True)
         print(f"📁 Nouveau dossier créé : {path}")
 
+    # 2. Sécurité : On ne veut pas générer 8000 images si elles y sont déjà
     if any(path.iterdir()):
-        print(f"⚠️ Le dossier {path} n'est pas vide, pas besoin de télécharger!")
+        print(f"⚠️ Le dossier {path} n'est pas vide, pas besoin de save!")
         return
 
     print("🚀 Sauvegarde du dataset augmenté en local...")
 
-    # On itère sur le dataset (image_tensor, label_tensor)
+    # 3. Boucle d'export
     for index, (img_tensor, label_tensor) in enumerate(dataset):
 
         # SAUVEGARDE IMAGE
