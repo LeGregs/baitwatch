@@ -35,23 +35,22 @@ def build_bbox_dataframe(labels_dataset,IMG_SIZE=(1920,1080)):
 def crop_bb(labels_bb_df, img_dataset):
     cropped_img = []
     class_bb = []
-    img_dataset = [img for img in img_dataset]
+    img_df = []
+    for ten in img_dataset:
+        img_df.append(ten.numpy())
 
-    for bb in labels_bb_df:
-        img_with_bb = img_dataset.iloc[bb["file_idx"]]
+    for bb in range(len(labels_bb_df)):
+        num_img = labels_bb_df.iloc[bb]['file_idx']
+        img_with_bb = img_df[int(num_img)]
+        bb_label = labels_bb_df.iloc[bb]
+        center_x = bb_label.loc["center_x"]
+        center_y = bb_label.loc["center_y"]
+        width = bb_label.loc["width"]
+        height = bb_label.loc["height"]
 
-        center_x = bb["center_x"]
-        center_y = bb["center_y"]
-        width = int(bb["width"])
-        height = int(bb["height"])
-
-        cropped_img.append(
-            img_with_bb[
-                int(center_y - width / 2) : int(center_y + width / 2) + 1,
-                int(center_x - height / 2) : int(center_x + height / 2) + 1,
-                :
-            ]
-        )
-        class_bb.append(bb["class_id"])
+        cropped_img.append(img_with_bb[
+            int(center_y - height/2) : int(center_y + height/2) + 1,
+            int(center_x - width/2) : int(center_x + width/2) + 1,:])
+        class_bb.append(labels_bb_df["class_id"])
 
     return cropped_img, class_bb
