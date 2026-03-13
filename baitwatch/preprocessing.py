@@ -56,6 +56,27 @@ def contrast_enhance(img: np.array) -> np.array:
     enhanced_image = cv.cvtColor(enhanced_ycrcb, cv.COLOR_YCrCb2RGB)
     return enhanced_image
 
+# Augment images
+def add_noise(image: tf.Tensor) -> tf.Tensor:
+    """Ajoute du bruit aléatoire à l'image."""
+    noise = tf.random.normal(shape=tf.shape(image), mean=0.0, stddev=25.0, dtype=tf.float32)
+    return tf.clip_by_value(tf.cast(image, tf.float32) + noise, 0, 255)
+
+def augment_image(image: tf.Tensor) -> list:
+    """Génère des variantes d'une image.
+
+    Flip, rotation, luminosité, contrast, saturation, bruit.
+    """
+    img_flip_lr = tf.image.flip_left_right(image)
+    img_flip_ud = tf.image.flip_up_down(image)
+    img_rot180 = tf.image.rot90(image, k=2)
+    img_bright = tf.image.random_brightness(image, max_delta=0.4)
+    img_contrast = tf.image.random_contrast(image, lower=0.3, upper=2.0)
+    img_sat = tf.image.random_saturation(image, lower=0.0, upper=4.0)
+    img_noisy = tf.cast(add_noise(image), tf.uint8)
+
+    return [img_flip_lr, img_flip_ud, img_rot180, img_bright, img_contrast, img_sat, img_noisy]
+
 
 # To be applied to a tf.data.Dataset using 'map',
 # see https://www.tensorflow.org/api_docs/python/tf/py_function
@@ -76,3 +97,16 @@ def preprocess(eager_tensor) -> np.array:
     resized_img = cv.resize(processed_img, preprocessing_settings.PREPROCESS_IMG_SIZE, interpolation=cv.INTER_LINEAR)
 
     return resized_img
+
+def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
+    """
+    Prend un dataset d'images nettoyées et renvoie un dataset augmenté.
+    Applique augment_image à chaque élément.
+    """
+    def _augment(img, label):
+        aug_imgs = augment_image(img)
+        all_imgs = [img] + aug_imgs
+        
+        return tf.data.Dataset.from_tensor_slices((all_imgs, [label] * len(all_imgs)))
+
+    return dataset.flat_map(_augment)
