@@ -26,12 +26,9 @@ app = FastAPI(lifespan=lifespan)
 async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> None:
     """Request a fish detection on given image, according to the detection type.
 
-    Args:
-        detection_type (TASK_TYPE): Type of detection to use.
-        image_file (UploadFile): image to detect fishes from.
-
-    Returns:
-        None: Nothing for now
+    - detection_type (FishDetectionEnum): Type of detection to use.
+    - image_file (UploadFile): image to detect fishes from.
+    - Returns: Nothing for now
     """
     contents = await image_file.read()
     image = Image.open(io.BytesIO(contents))
@@ -43,7 +40,6 @@ async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> N
 async def ping() -> list[str]:
     """PING
 
-    Returns:
-        list[str]: PONG
+    Returns: PONG
     """
     return ["pong"]
