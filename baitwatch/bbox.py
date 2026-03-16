@@ -7,7 +7,7 @@ from tensorflow.data import AUTOTUNE
 
 # Local
 from baitwatch.data import get_labels, get_images
-from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
+from baitwatch.settings import dataset_settings
 from baitwatch.preprocessing import preprocess
 from baitwatch.data import save_image_dataset
 
