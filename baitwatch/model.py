@@ -73,30 +73,6 @@ def fonf_optimizer() -> keras.optimizers.Optimizer:
     return optimizer
 
 
-def compile_model(model,
-                  optimizer='rmsprop',
-                  loss = 'binary_crossentropy',
-                  metrics=['accuracy', 'recall']):
-    """
-    Compile le modèle
-
-    Args :
-        model: le modèle à compiler
-        optimizer: choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
-        metrics: les métriques à suivre pendant l'entraînement
-
-    Returns :
-        model: le modèle compilé
-    """
-
-    model.compile(
-        optimizer=optimizer,            # ajuste les poids
-        loss=loss,  # mesure l'erreur
-        metrics=metrics         # % de bonnes prédictions
-    )
-    return model
-
-
 def train_model(model,
                 *train_data: np.ndarray | Dataset,
                 validation_data: tuple[np.ndarray] | Dataset,
@@ -187,9 +163,3 @@ def get_classification_report(
 
     return classification_report(y_val, y_pred)
 
-
-if __name__ == '__main__':
-    model = build_model()
-    model = compile_model(model)
-    history, model = train_model(model, X_train, y_train, X_val, y_val)
-    model.summary()
