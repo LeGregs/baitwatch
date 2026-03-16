@@ -10,12 +10,12 @@ from baitwatch.settings import preprocessing_settings
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
-def build_model(INPUT_FORMAT = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
+def build_model(input_format = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
     """
     Build a CNN model for fonf task.
     """
     # Imput layer
-    inputs  = keras.Input(shape=INPUT_FORMAT)
+    inputs  = keras.Input(shape=input_format)
 
     # Normalize images
     x = keras.layers.Rescaling(scale=1./255)(inputs)

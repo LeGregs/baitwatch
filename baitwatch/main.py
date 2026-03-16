@@ -9,7 +9,25 @@ from baitwatch.plot_history import plot_history
 from baitwatch.preprocessing import get_preprocessed_ds
 from baitwatch.preprocessing import resize
 from baitwatch.registry import save_model, load_model
-from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
+from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, preprocessing_settings
+
+# Define how to load labels, depending on bi-class or multi-class
+DETECTION_TYPE_TO_LABEL = {
+    FishDetectionEnum.FONF: "int",
+    FishDetectionEnum.IFSP: "categorical",
+}
+
+# Define image sizes
+DETECTION_TYPE_TO_IMG_SIZE = {
+    FishDetectionEnum.FONF: preprocessing_settings.PREPROCESS_IMG_SIZE[::-1],
+    FishDetectionEnum.IFSP: dataset_settings.CROP_IMG_SIZE,
+}
+
+# Defin output layers
+DETECTION_TYPE_TO_OUTPUT_LAYER = {
+    FishDetectionEnum.FONF: (1, "sigmoid"),
+    FishDetectionEnum.IFSP: (8, 'softmax'),
+}
 
 
 def download_data():
@@ -38,61 +56,88 @@ def preprocess_dataset():
 
 
 def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
+    # Cast str as Enum object (from Make)
+    model_type = FishDetectionEnum(model_type)
+
+    x_train_ds, x_val_ds, _ = get_processed_dataset(
+        dataset_settings.PROCESSED_DATA_PATH / model_type,
+        image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
+        label_mode=DETECTION_TYPE_TO_LABEL[model_type]
+    )
+    optimizer = fonf_optimizer()
+    model = build_model(
+        input_format=(*DETECTION_TYPE_TO_IMG_SIZE[model_type], 3),
+        output_layer=DETECTION_TYPE_TO_OUTPUT_LAYER[model_type],
+    )
+
     if model_type == FishDetectionEnum.FONF:
-        X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
-        model = build_model()
-        optimizer = fonf_optimizer()
-        model = compile_model(model, optimizer=optimizer, metrics=["accuracy", "recall", "precision", "AUC"])
-        history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
+        model = model.compile(
+            optimizer=optimizer,
+            loss='binary_crossentropy',
+            metrics=["accuracy", "recall", "precision", "AUC"],
+        )
 
+    if model_type == FishDetectionEnum.IFSP:
+        model = model.compile(
+            loss='categorical_crossentropy',
+            optimizer=optimizer,
+            metrics=["accuracy", "recall", "precision", "AUC"])
 
-    elif model_type == FishDetectionEnum.IFSP:
-        X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type,
-                                                        image_size=dataset_settings.CROP_IMG_SIZE,
-                                                        label_mode='categorical')
-
-        model = build_model(INPUT_FORMAT=(105, 256, 3), output_layer=(8, 'softmax'))
-        optimizer = fonf_optimizer()
-        model = compile_model(model,
-                              loss='categorical_crossentropy',
-                              optimizer=optimizer,
-                              metrics=["accuracy", "recall", "precision", "AUC"])
-        history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
-
+    history, model = train_model(model, x_train_ds, validation_data=x_val_ds)
     save_model(model, model_type, model_settings.MODEL_LOCAL_PATH)
     plot_history(history)
 
 
-def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-    model = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
-    _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
+def evaluate(model_type: FishDetectionEnum):
+    # Cast str as Enum object
+    model_type = FishDetectionEnum(model_type)
 
-    results = model.evaluate(X_test_ds, return_dict=True)
+    model = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
+
+    _, _, x_test_ds = get_processed_dataset(
+        dataset_settings.PROCESSED_DATA_PATH / model_type,
+        image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
+        label_mode=DETECTION_TYPE_TO_LABEL[model_type],
+    )
+
+    results = model.evaluate(x_test_ds, return_dict=True)
     print(results)
 
 
-def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name: str = "") -> None:
+def classification_report(model_type: FishDetectionEnum, model_name: str = "") -> None:
+    # Cast str as Enum object
+    model_type = FishDetectionEnum(model_type)
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
 
-    if model_type != 'fonf':
-        label_mode = 'categorical'
-    else:
-        label_mode = 'int'
+    _, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type,
+                                           image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
+                                           label_mode=DETECTION_TYPE_TO_LABEL[model_type])
 
-    _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type,
-                                           image_size=dataset_settings.CROP_IMG_SIZE,
-                                           label_mode=label_mode)
-    print(get_classification_report(model, X_val_ds))
+    print(get_classification_report(model, x_val_ds))
 
 
-def run_cycle(task_type: FishDetectionEnum = FishDetectionEnum.FONF) -> None:
+def run_cycle(task_type: FishDetectionEnum) -> None:
+    # Cast str as Enum object
+    task_type = FishDetectionEnum(task_type)
+
     download_data()
     preprocess_dataset()
     train(task_type)
     classification_report(task_type)
 
 
-def detect_fishes(model: Model, image: ImageFile.ImageFile) -> None:
+def detect_fishes(model: Model, image: ImageFile.ImageFile) -> dict:
+    """Request a fish detection on given image, based on given model.
+
+    Perform preprocessing on image then predict on processed image.
+
+    Args:
+        model (FishDetectionEnum): Fish detection model
+        image (ImageFile.ImageFile): Image file object
+
+    Returns:
+        Dict: Fish detection results
+    """
     # Perform preprocessing
     image_ds = Dataset.from_tensor_slices([np.array(image)])
     image_preprocessed = get_preprocessed_ds(image_ds)
