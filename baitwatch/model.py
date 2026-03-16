@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 from tensorflow.data import Dataset
 from tensorflow import keras
@@ -7,17 +5,17 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report
 
-from baitwatch.settings import preprocessing_settings, model_settings
+from baitwatch.settings import preprocessing_settings
 
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
-def build_model():
+def build_model(INPUT_FORMAT = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
     """
     Build a CNN model for fonf task.
     """
     # Imput layer
-    inputs  = keras.Input(shape=(*IMG_SIZE, 3))
+    inputs  = keras.Input(shape=INPUT_FORMAT)
 
     # Normalize images
     x = keras.layers.Rescaling(scale=1./255)(inputs)
@@ -60,7 +58,7 @@ def build_model():
     x = layers.Dense(8, activation='relu')(x)                 # couche dense pour apprendre des combinaisons de features
 
     # Output layer
-    outputs = layers.Dense(1, activation='sigmoid')(x)        # probabilité fish
+    outputs = layers.Dense(output_layer[0], output_layer[1])(x)        # probabilité fish
 
     model = keras.Model(inputs, outputs)                      # assemble les couches
 
@@ -77,7 +75,8 @@ def fonf_optimizer() -> keras.optimizers.Optimizer:
 
 def compile_model(model,
                   optimizer='rmsprop',
-                  metrics=['accuracy']):
+                  loss = 'binary_crossentropy',
+                  metrics=['accuracy', 'recall']):
     """
     Compile le modèle
 
@@ -91,8 +90,8 @@ def compile_model(model,
     """
 
     model.compile(
-        optimizer= optimizer,            # ajuste les poids
-        loss='binary_crossentropy',  # mesure l'erreur
+        optimizer=optimizer,            # ajuste les poids
+        loss=loss,  # mesure l'erreur
         metrics=metrics         # % de bonnes prédictions
     )
     return model
@@ -141,50 +140,6 @@ def train_model(model,
         callbacks=[early_stopping]       # arrête automatiquement si plateau
     )
     return history, model
-
-
-def save_model(
-    model: keras.Model,
-    path: Path = model_settings.MODEL_PATH
-) -> None:
-    """Save the given model in given path."""
-    print(f"⏳ Saving model at {path}...")
-    if not path.exists():
-        path.mkdir(parents=True)
-    model_num = len(list(path.iterdir())) + 1
-    model_name = f"model_{model_num}.keras"
-    model.save(path / model_name)
-    print(f"✅ Model {model_name} saved at {path}")
-
-
-def load_model(
-    path: Path = model_settings.MODEL_PATH,
-    model_name: str = ""
-) -> keras.Model:
-    """Load the model.
-
-    If no model name is passed, return the last model in the path.
-    """
-    print(f"⏳ Loading model...")
-    if not path.exists():
-        raise FileNotFoundError(f"Path or directory does not exists: {path}")
-
-    models = [file_path for file_path in path.iterdir() if file_path.name.endswith(".keras")]
-    if not models :
-        raise FileNotFoundError(f"No keras model found at {path}")
-
-    # Get the last model (creation date) when no name passed
-    if not model_name:
-        models.sort(key=lambda model_path: model_path.stat().st_ctime)
-        model_name = models[-1].name
-
-    if path / model_name not in models:
-        raise FileNotFoundError(f"Model {model_name} not found at {path}")
-
-    model = keras.models.load_model(path / model_name)
-    print(f"✅ Model {model_name} loaded")
-
-    return model
 
 
 def get_classification_report(

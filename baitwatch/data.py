@@ -6,7 +6,7 @@ from PIL import Image
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
-from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
+from baitwatch.settings import dataset_settings, preprocessing_settings, cloud_settings, DATASET_NAME
 
 
 def dl_data(
@@ -33,7 +33,7 @@ def dl_data(
         local_filename = directory_path
 
         client = storage.Client()
-        bucket = client.bucket(BUCKET_NAME)
+        bucket = client.bucket(cloud_settings.BUCKET_NAME)
         #blob = bucket.blob(storage_filename)
         blobs = [blob.name for blob in client.list_blobs("baitwatch-bucket", prefix="training_data_species_grouped")]
         transfer_manager.download_many_to_path(bucket,
@@ -186,7 +186,8 @@ def save_image_dataset(
 
 
 def get_processed_dataset(
-    path: Path = dataset_settings.PROCESSED_DATA_PATH,
+    path: Path = dataset_settings.PROCESSED_DATA_PATH, image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1],
+    label_mode = 'int'
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """Load preprocessed images into tf.data.Dataset with labels.
 
@@ -201,20 +202,23 @@ def get_processed_dataset(
         raise FileNotFoundError(f"No data found at {path}")
 
     # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
-    image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=image_size)
+                                                            image_size=image_size,
+                                                            label_mode=label_mode
+                                                            )
     X_val_ds = tf.keras.utils.image_dataset_from_directory(path / "val",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=image_size)
+                                                            image_size=image_size,
+                                                            label_mode=label_mode)
     X_test_ds = tf.keras.utils.image_dataset_from_directory(path / "test",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=image_size)
+                                                            image_size=image_size,
+                                                            label_mode=label_mode)
 
     return X_train_ds, X_val_ds, X_test_ds
 

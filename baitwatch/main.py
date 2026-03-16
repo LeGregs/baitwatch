@@ -6,8 +6,12 @@ from tensorflow.data import Dataset
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import get_preprocessed_ds
 from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
+from baitwatch.preprocessing import preprocess, resize
+from baitwatch.model import build_model, compile_model, train_model, get_classification_report, fonf_optimizer
+from baitwatch.registry import save_model, load_model
 from baitwatch.plot_history import plot_history
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
+from baitwatch.bbox import get_dataset_IFSP
 
 
 def download_data():
@@ -22,6 +26,10 @@ def preprocess_dataset():
     imgs_val_preprocessed = get_preprocessed_ds(imgs_val)
     imgs_test_preprocessed = get_preprocessed_ds(imgs_test)
 
+    imgs_train_preprocessed = imgs_train_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
+    imgs_val_preprocessed = imgs_val_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
+    imgs_test_preprocessed = imgs_test_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
+
     # Use labels to separate datasets so it is possible to reload them as a single dataset with labels
     # Necessary to use tf.Dataset during training
     y_train, y_val, y_test = get_target_fonf()
@@ -32,21 +40,34 @@ def preprocess_dataset():
 
 
 def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-    X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
-    model = build_model()
 
-    # TODO: optimizer for every model type.
-    optimizer = fonf_optimizer()
+    if model_type == FishDetectionEnum.FONF:
+        X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
+        model = build_model()
+        optimizer = fonf_optimizer()
+        model = compile_model(model, optimizer=optimizer, metrics=["accuracy", "recall", "precision", "AUC"])
+        history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
 
-    model = compile_model(model, optimizer=optimizer, metrics=["accuracy", "recall", "precision", "AUC"])
-    history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
-    save_model(model, model_settings.MODEL_PATH / model_type)
+
+    elif model_type == FishDetectionEnum.IFSP:
+        X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type,
+                                                        image_size=dataset_settings.CROP_IMG_SIZE,
+                                                        label_mode='categorical')
+
+        model = build_model(INPUT_FORMAT=(105,256,3), output_layer=(8,'softmax'))
+        optimizer = fonf_optimizer()
+        model = compile_model(model,
+                              loss='categorical_crossentropy',
+                              optimizer=optimizer,
+                              metrics=["accuracy", "recall", "precision", "AUC"])
+        history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
+
+    save_model(model, model_type, model_settings.MODEL_LOCAL_PATH)
     plot_history(history)
 
 
 def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-    model  = load_model(model_settings.MODEL_PATH / model_type)
-
+    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
     _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
 
     results = model.evaluate(X_test_ds, return_dict=True)
@@ -54,8 +75,16 @@ def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
 
 
 def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name:str = "") -> None:
-    model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
-    _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
+    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
+
+    if model_type != 'fonf':
+        label_mode = 'categorical'
+    else:
+        label_mode = 'int'
+
+    _, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type,
+                                           image_size=dataset_settings.CROP_IMG_SIZE,
+                                           label_mode=label_mode)
     print(get_classification_report(model, X_val_ds))
 
 
