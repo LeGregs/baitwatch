@@ -2,6 +2,7 @@ import numpy as np
 from PIL import ImageFile
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
+from tensorflow.data import AUTOTUNE
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.model import build_model, train_model, get_classification_report, fonf_optimizer
@@ -60,7 +61,7 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     model_type = FishDetectionEnum(model_type)
 
     x_train_ds, x_val_ds, _ = get_processed_dataset(
-        dataset_settings.PROCESSED_DATA_PATH / model_type,
+        dataset_settings.PROCESSED_DATA_PATH / model_type.value,
         image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
         label_mode=DETECTION_TYPE_TO_LABEL[model_type]
     )
@@ -70,14 +71,14 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
         output_layer=DETECTION_TYPE_TO_OUTPUT_LAYER[model_type],
     )
 
-    if model_type == FishDetectionEnum.FONF:
+    if model_type is FishDetectionEnum.FONF:
         model = model.compile(
             optimizer=optimizer,
             loss='binary_crossentropy',
             metrics=["accuracy", "recall", "precision", "AUC"],
         )
 
-    if model_type == FishDetectionEnum.IFSP:
+    if model_type is FishDetectionEnum.IFSP:
         model = model.compile(
             loss='categorical_crossentropy',
             optimizer=optimizer,
@@ -95,7 +96,7 @@ def evaluate(model_type: FishDetectionEnum):
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
 
     _, _, x_test_ds = get_processed_dataset(
-        dataset_settings.PROCESSED_DATA_PATH / model_type,
+        dataset_settings.PROCESSED_DATA_PATH / model_type.value,
         image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
         label_mode=DETECTION_TYPE_TO_LABEL[model_type],
     )
@@ -109,7 +110,7 @@ def classification_report(model_type: FishDetectionEnum, model_name: str = "") -
     model_type = FishDetectionEnum(model_type)
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
 
-    _, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type,
+    _, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
                                            image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
                                            label_mode=DETECTION_TYPE_TO_LABEL[model_type])
 
