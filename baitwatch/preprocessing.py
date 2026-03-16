@@ -133,3 +133,7 @@ def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
         return tf.data.Dataset.from_tensor_slices((aug_imgs, aug_labs))
 
     return dataset.map(_augment)
+
+
+def get_preprocessed_ds(dataset: tf.data.Dataset) -> tf.data.Dataset:
+    return dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)

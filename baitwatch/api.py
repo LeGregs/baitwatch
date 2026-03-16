@@ -7,6 +7,8 @@ from PIL import Image
 from baitwatch.settings import FishDetectionEnum
 from baitwatch.main import detect_fishes
 
+from baitwatch.model import load_model
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,6 +18,7 @@ async def lifespan(app: FastAPI):
     and dropped when closing app.
     """
     # Startup: Initialize resources
+    app.state.models.fonf = load_model(FishDetectionEnum.FONF)
     yield
     # Shutdown: Clean up resources
 
@@ -33,7 +36,7 @@ app = FastAPI(
 
 
 @app.post("/detect-fishes/")
-async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> None:
+async def detect(detection_type: FishDetectionEnum, image_file: UploadFile):
     """Request a fish detection on given image, according to the detection type.
 
     - **detection_type** (FishDetectionEnum): Type of detection to use.
@@ -42,8 +45,10 @@ async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> N
     """
     contents = await image_file.read()
     image = Image.open(io.BytesIO(contents))
-
-    return detect_fishes(detection_type, image)
+    model = app.state.models.get(detection_type.value)
+    if model is None:
+        return {"error": f"No model found for detection type {detection_type.value}"}
+    return detect_fishes(model, image)
 
 
 @app.get("/ping/")

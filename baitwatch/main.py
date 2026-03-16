@@ -1,8 +1,8 @@
 from PIL import Image
-from tensorflow.data import AUTOTUNE
+from tensorflow.keras import Model
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
-from baitwatch.preprocessing import preprocess
+from baitwatch.preprocessing import get_preprocessed_ds
 from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
 from baitwatch.plot_history import plot_history
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
@@ -16,9 +16,9 @@ def download_data():
 def preprocess_dataset():
     """Process the data locally and save them."""
     imgs_train, imgs_val, imgs_test = get_images()
-    imgs_train_preprocessed = imgs_train.map(preprocess, num_parallel_calls=AUTOTUNE)
-    imgs_val_preprocessed = imgs_val.map(preprocess, num_parallel_calls=AUTOTUNE)
-    imgs_test_preprocessed = imgs_test.map(preprocess, num_parallel_calls=AUTOTUNE)
+    imgs_train_preprocessed = get_preprocessed_ds(imgs_train)
+    imgs_val_preprocessed = get_preprocessed_ds(imgs_val)
+    imgs_test_preprocessed = get_preprocessed_ds(imgs_test)
 
     # Use labels to separate datasets so it is possible to reload them as a single dataset with labels
     # Necessary to use tf.Dataset during training
@@ -64,7 +64,7 @@ def run_cycle(task_type: FishDetectionEnum = FishDetectionEnum.FONF) -> None:
     classification_report(task_type)
 
 
-def detect_fishes(detection_type: FishDetectionEnum, image: Image) -> None:
+def detect_fishes(model: Model, image: Image) -> None:
     # Perform preprocessing
 
     # Perform detection
