@@ -2,15 +2,13 @@ import numpy as np
 from PIL import ImageFile
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
-from tensorflow.data import AUTOTUNE
 
-from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
+from baitwatch.data import dl_data, save_image_dataset, get_processed_dataset
 from baitwatch.model import build_model, train_model, get_classification_report, fonf_optimizer
+from baitwatch.models import process_data, get_preprocess
 from baitwatch.plot_history import plot_history
-from baitwatch.preprocessing import get_preprocessed_ds
-from baitwatch.preprocessing import resize
 from baitwatch.registry import save_model, load_model
-from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, preprocessing_settings
+from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, preprocessing_settings, DATASET_NAME
 
 # Define how to load labels, depending on bi-class or multi-class
 DETECTION_TYPE_TO_LABEL = {
@@ -33,30 +31,25 @@ DETECTION_TYPE_TO_OUTPUT_LAYER = {
 
 def download_data():
     """Download data locally."""
-    dl_data()
+    dl_data(directory_path=dataset_settings.RAW_DATA_PATH)
 
 
-def preprocess_dataset():
+def preprocess_data(task_type: FishDetectionEnum):
     """Process the data locally and save them."""
-    imgs_train, imgs_val, imgs_test = get_images()
-    imgs_train_preprocessed = get_preprocessed_ds(imgs_train)
-    imgs_val_preprocessed = get_preprocessed_ds(imgs_val)
-    imgs_test_preprocessed = get_preprocessed_ds(imgs_test)
+    task_type = FishDetectionEnum(task_type)
 
-    imgs_train_preprocessed = imgs_train_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
-    imgs_val_preprocessed = imgs_val_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
-    imgs_test_preprocessed = imgs_test_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
+    processor = process_data(task_type)
+    x_train, y_train, x_val, y_val, x_test, y_test = processor(
+        dataset_settings.RAW_DATA_PATH / DATASET_NAME,
+        dataset_settings.ORIGINAL_SIZE
+    )
 
-    # Use labels to separate datasets so it is possible to reload them as a single dataset with labels
-    # Necessary to use tf.Dataset during training
-    y_train, y_val, y_test = get_target_fonf()
-
-    save_image_dataset(imgs_train_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "train", labels=y_train)
-    save_image_dataset(imgs_val_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "val", labels=y_val)
-    save_image_dataset(imgs_test_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "test", labels=y_test)
+    save_image_dataset(x_train, dataset_settings.PROCESSED_DATA_PATH / task_type.value / "train", labels=y_train)
+    save_image_dataset(x_val, dataset_settings.PROCESSED_DATA_PATH / task_type.value / "val", labels=y_val)
+    save_image_dataset(x_test, dataset_settings.PROCESSED_DATA_PATH / task_type.value / "test", labels=y_test)
 
 
-def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
+def train(model_type: FishDetectionEnum):
     # Cast str as Enum object (from Make)
     model_type = FishDetectionEnum(model_type)
 
@@ -72,14 +65,14 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     )
 
     if model_type is FishDetectionEnum.FONF:
-        model = model.compile(
+        model.compile(
             optimizer=optimizer,
             loss='binary_crossentropy',
             metrics=["accuracy", "recall", "precision", "AUC"],
         )
 
     if model_type is FishDetectionEnum.IFSP:
-        model = model.compile(
+        model.compile(
             loss='categorical_crossentropy',
             optimizer=optimizer,
             metrics=["accuracy", "recall", "precision", "AUC"])
@@ -122,18 +115,19 @@ def run_cycle(task_type: FishDetectionEnum) -> None:
     task_type = FishDetectionEnum(task_type)
 
     download_data()
-    preprocess_dataset()
+    preprocess_data(task_type)
     train(task_type)
     classification_report(task_type)
 
 
-def detect_fishes(model: Model, image: ImageFile.ImageFile) -> dict:
+def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageFile.ImageFile) -> dict:
     """Request a fish detection on given image, based on given model.
 
     Perform preprocessing on image then predict on processed image.
 
     Args:
         model (FishDetectionEnum): Fish detection model
+        detection_type (FishDetectionEnum): Fish detection type
         image (ImageFile.ImageFile): Image file object
 
     Returns:
@@ -141,7 +135,7 @@ def detect_fishes(model: Model, image: ImageFile.ImageFile) -> dict:
     """
     # Perform preprocessing
     image_ds = Dataset.from_tensor_slices([np.array(image)])
-    image_preprocessed = get_preprocessed_ds(image_ds)
+    image_preprocessed = get_preprocess(detection_type)(image_ds)
     # Perform detection
     results = model.predict(image_preprocessed)
     return results

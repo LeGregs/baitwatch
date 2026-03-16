@@ -111,31 +111,6 @@ def get_labels(
     return labels_train, labels_val, labels_test
 
 
-def get_target_fonf(
-        directory_path: Path = dataset_settings.RAW_DATA_PATH / DATASET_NAME,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Get the binary target "Fish Or No Fish" (fonf)
-    If no labels : no fish = O
-    If labels : fish = 1
-
-    Returns:
-        the targets for train, val and test (arrays of 0 and 1)
-    """
-
-    labels_train, labels_val, labels_test = get_labels(directory_path)
-
-    # If there is no label, there is no fish (0)
-    y_train = np.array([0 if txt == b'' else 1 \
-                        for txt in labels_train.as_numpy_iterator()])
-    y_val = np.array([0 if txt == b'' else 1 \
-                      for txt in labels_val.as_numpy_iterator()])
-    y_test = np.array([0 if txt == b'' else 1 \
-                       for txt in labels_test.as_numpy_iterator()])
-
-    return y_train, y_val, y_test
-
-
 def save_image_dataset(
         dataset: tf.data.Dataset,
         path: Path,

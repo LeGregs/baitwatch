@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize resources
     app.state.models = {
         FishDetectionEnum.FONF: load_model(FishDetectionEnum.FONF),
+        FishDetectionEnum.IFSP: load_model(FishDetectionEnum.IFSP),
     }
     yield
     # Shutdown: Clean up resources
@@ -56,7 +57,7 @@ async def detect(detection_type: FishDetectionEnum, image_file: UploadFile):
     if model is None:
         return {"error": f"No model found for detection type {detection_type.value}"}
 
-    return detect_fishes(model, image)
+    return detect_fishes(model, detection_type, image)
 
 
 @app.get("/ping/")
