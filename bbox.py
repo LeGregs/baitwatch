@@ -1,9 +1,13 @@
 import pandas as pd
 import numpy as np
+import tensorflow as tf
+import cv2 as cv
+import pandas as pd
 
 # Local
 from baitwatch.data import get_labels
 from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
+
 
 def build_bbox_dataframe(labels_dataset,IMG_SIZE=(1920,1080)):
     IMG_W, IMG_H = IMG_SIZE
@@ -56,9 +60,6 @@ def crop_bb(labels_bb_df, img_dataset):
     return cropped_img, class_bb
 
 
-import tensorflow as tf
-import cv2 as cv
-import pandas as pd
 
 
 def reshape_pad_crop(cropped_img, format_img = (105,256)):
