@@ -21,25 +21,25 @@ from baitwatch.bbox import get_dataset_IFSP
 
 
 def download_data():
-    """Télécharge les données en local."""
+    """Download data locally."""
 
-    print("⬇️  Téléchargement des données...")
+    print("⬇️ Dowloading data...")
     dl_data()
-    print("✅ Données téléchargées")
+    print("✅ Data downloaded")
 
 
 def preprocess_dataset():
-    """Préprocesse les images (white balance, contraste, resize) et sauvegarde par split."""
+    """Process the data locally and save them."""
 
-    print("🔧 Lancement du preprocessing du dataset...")
+    print("🔧 Starting dataset preprocessing...")
 
     imgs_train, imgs_val, imgs_test = get_images()
 
-    print("   Preprocessing des images train...")
+    print("   Preprocessing train images...")
     imgs_train_preprocessed = imgs_train.map(preprocess, num_parallel_calls=AUTOTUNE)
-    print("   Preprocessing des images val...")
+    print("   Preprocessing images val...")
     imgs_val_preprocessed = imgs_val.map(preprocess, num_parallel_calls=AUTOTUNE)
-    print("   Preprocessing des images test...")
+    print("   Preprocessing images test...")
     imgs_test_preprocessed = imgs_test.map(preprocess, num_parallel_calls=AUTOTUNE)
 
     imgs_train_preprocessed = imgs_train_preprocessed.map(resize, num_parallel_calls=AUTOTUNE)
@@ -50,12 +50,12 @@ def preprocess_dataset():
     # Necessary to use tf.Dataset during training
     y_train, y_val, y_test = get_target_fonf()
 
-    print("💾 Sauvegarde des datasets préprocessés...")
+    print("💾 Saving preprocessed datasets...")
     save_image_dataset(imgs_train_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "train", labels=y_train)
     save_image_dataset(imgs_val_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "val", labels=y_val)
     save_image_dataset(imgs_test_preprocessed, dataset_settings.PROCESSED_DATA_PATH / "fonf" / "test", labels=y_test)
 
-    print("✅ Preprocessing terminé et sauvegardé")
+    print("✅ Preprocessing completed and saved")
 
 
 def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
@@ -90,23 +90,20 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
                               metrics=["accuracy", "recall", "precision", "AUC"])
         history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
 
-<<<<<<< HEAD
     model = compile_model(model, optimizer=optimizer, metrics=["accuracy", "recall", "precision", "AUC"])
     history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
 
-    print("💾 Sauvegarde du modèle...")
-=======
->>>>>>> 24ab38d4e9ee8a95bfd0c220db110f78dce9a477
+    print("💾 Saving model...")
     save_model(model, model_settings.MODEL_PATH / model_type)
 
-    print("✅ Entraînement terminé")
+    print("✅ Training finished")
     plot_history(history)
 
 
 def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-    """Évalue le modèle sur le jeu de test et affiche les métriques."""
+    """Evaluate the model on the test set and display the metrics."""
 
-    print(f"🧪 Évaluation du modèle ({model_type})...")
+    print(f"🧪 Model evaluating ({model_type})...")
 
     model  = load_model(model_settings.MODEL_PATH / model_type)
 
@@ -115,13 +112,13 @@ def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     results = model.evaluate(X_test_ds, return_dict=True)
     print(results)
 
-    print("✅ Évaluation terminée")
+    print("✅ Evaluation completed")
 
 
 def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name:str = "") -> None:
-    """Charge le modèle et affiche le rapport de classification sur le jeu de validation."""
+    """Load the model and display the classification report on the validation set."""
 
-    print(f"📋 Génération du rapport de classification ({model_type})...")
+    print(f"📋 Generating classification report ({model_type})...")
 
     model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
 
@@ -135,24 +132,24 @@ def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF
                                            label_mode=label_mode)
     print(get_classification_report(model, X_val_ds))
 
-    print("✅ Rapport généré")
+    print("✅ Report generated")
 
 
 def run_cycle(task_type: FishDetectionEnum = FishDetectionEnum.FONF) -> None:
-    """Exécute le cycle complet : download → preprocess → train → classification report."""
+    """Run the full cycle: download → preprocess → train → classification report."""
 
-    print("🚀 Lancement du cycle complet...")
+    print("🚀 Starting full cycle...")
 
     download_data()
     preprocess_dataset()
     train(task_type)
     classification_report(task_type)
 
-    print("🏁 Cycle complet terminé")
+    print("🏁 Full cycle completed")
 
 
 def detect_fishes(detection_type: FishDetectionEnum, image: Image) -> None:
-    """Détection de poissons sur une image (à implémenter)."""
+    """Fish detection on an image """
 
     # Perform preprocessing
 

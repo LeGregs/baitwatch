@@ -21,13 +21,13 @@ from baitwatch.data import save_image_dataset
 
 def build_bbox_dataframe(labels_dataset, IMG_SIZE=(1920, 1080)):
     """
-    Lit les fichiers labels YOLO et renvoie un DataFrame
-    avec les coordonnées en pixels de chaque bounding box.
+    Reads YOLO label files and returns a DataFrame
+    with the pixel coordinates of each bounding box.
     """
     IMG_W, IMG_H = IMG_SIZE
     rows = []
 
-    print("📄 Lecture des labels YOLO...")
+    print("📄 Reading YOLO's labels...")
 
     for idx, txt in enumerate(labels_dataset.as_numpy_iterator()):
         txt = txt.decode("utf-8").strip()
@@ -50,27 +50,27 @@ def build_bbox_dataframe(labels_dataset, IMG_SIZE=(1920, 1080)):
                 "area": w * h
             })
 
-    print(f"✅ {len(rows)} bounding boxes extraites depuis {idx + 1} fichiers labels")
+    print(f"✅ {len(rows)} bounding boxes extracted from {idx + 1} fichiers labels")
 
     return pd.DataFrame(rows)
 
 
 def crop_bb(labels_bb_df, img_dataset):
     """
-    Crop chaque bounding box depuis les images.
-    Renvoie la liste des crops (np.array) et leurs class_id.
+    Crop each bounding box from the images.
+    Returns the list of crops (np.array) and their class_id.
     """
     cropped_img = []
     class_bb = []
     img_df = []
 
-    print("✂️  Chargement des images en mémoire...")
+    print("✂️  Loading images into memory...")
 
     for ten in img_dataset:
         img_df.append(ten.numpy())
 
-    print(f"   {len(img_df)} images chargées")
-    print("🔲 Découpe des bounding boxes...")
+    print(f"   {len(img_df)} images loaded")
+    print("🔲 Cropping bounding boxes...")
 
     for bb in range(len(labels_bb_df)):
         num_img = labels_bb_df.iloc[bb]['file_idx']
@@ -86,19 +86,19 @@ def crop_bb(labels_bb_df, img_dataset):
             int(center_x - width/2) : int(center_x + width/2) + 1,:])
         class_bb.append(int(labels_bb_df.iloc[bb]["class_id"]))
 
-    print(f"✅ {len(cropped_img)} crops générés")
+    print(f"✅ {len(cropped_img)} crops generated")
 
     return cropped_img, class_bb
 
 
 def reshape_pad_crop(cropped_img, format_img=(105, 256)):
     """
-    Resize chaque crop en gardant le ratio,
-    puis pad pour atteindre le format cible (h, w).
+    Resize each crop while keeping the aspect ratio,
+    then pad to reach the target format (h, w).
     """
     bb_crop_fin = []
 
-    print(f"📐 Resize + pad des crops vers {format_img}...")
+    print(f"📐 Resize + pad crops to {format_img}...")
 
     for img in cropped_img:
         img_proc = img.astype("uint8")
@@ -113,7 +113,7 @@ def reshape_pad_crop(cropped_img, format_img=(105, 256)):
                                 format_img[0],
                                 format_img[1]))
 
-    print(f"✅ {len(bb_crop_fin)} crops reformatés en {format_img}")
+    print(f"✅ {len(bb_crop_fin)} crops resized to {format_img}")
 
     return bb_crop_fin
 
