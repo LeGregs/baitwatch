@@ -186,7 +186,7 @@ def save_image_dataset(
 
 
 def get_processed_dataset(
-    path: Path = dataset_settings.PROCESSED_DATA_PATH,
+    path: Path = dataset_settings.PROCESSED_DATA_PATH, image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """Load preprocessed images into tf.data.Dataset with labels.
 
@@ -201,7 +201,6 @@ def get_processed_dataset(
         raise FileNotFoundError(f"No data found at {path}")
 
     # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
-    image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                             labels="inferred",
