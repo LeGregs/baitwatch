@@ -186,7 +186,8 @@ def save_image_dataset(
 
 
 def get_processed_dataset(
-    path: Path = dataset_settings.PROCESSED_DATA_PATH, image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
+    path: Path = dataset_settings.PROCESSED_DATA_PATH, image_size = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1],
+    label_mode = 'int'
     ) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """Load preprocessed images into tf.data.Dataset with labels.
 
@@ -205,15 +206,19 @@ def get_processed_dataset(
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=image_size)
+                                                            image_size=image_size,
+                                                            label_mode=label_mode
+                                                            )
     X_val_ds = tf.keras.utils.image_dataset_from_directory(path / "val",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=image_size)
+                                                            image_size=image_size,
+                                                            label_mode=label_mode)
     X_test_ds = tf.keras.utils.image_dataset_from_directory(path / "test",
                                                             labels="inferred",
                                                             shuffle=True,
-                                                            image_size=image_size)
+                                                            image_size=image_size,
+                                                            label_mode=label_mode)
 
     return X_train_ds, X_val_ds, X_test_ds
 
