@@ -3,10 +3,13 @@ import numpy as np
 import tensorflow as tf
 import cv2 as cv
 import pandas as pd
+from tensorflow.data import AUTOTUNE
 
 # Local
-from baitwatch.data import get_labels
+from baitwatch.data import get_labels, get_images
 from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
+from baitwatch.preprocessing import preprocess
+from baitwatch.data import save_image_dataset
 
 
 def build_bbox_dataframe(labels_dataset,IMG_SIZE=(1920,1080)):
@@ -55,7 +58,7 @@ def crop_bb(labels_bb_df, img_dataset):
         cropped_img.append(img_with_bb[
             int(center_y - height/2) : int(center_y + height/2) + 1,
             int(center_x - width/2) : int(center_x + width/2) + 1,:])
-        class_bb.append(labels_bb_df["class_id"])
+        class_bb.append(int(labels_bb_df.iloc[bb]["class_id"]))
 
     return cropped_img, class_bb
 
@@ -77,3 +80,35 @@ def reshape_pad_crop(cropped_img, format_img = (105,256)):
                                 format_img[0],
                                 format_img[1]))
     return bb_crop_fin
+
+
+def get_dataset_IFSP():
+
+    imgs_train, imgs_val, imgs_test = get_images()
+    imgs_train_preprocessed = imgs_train.map(preprocess, num_parallel_calls=AUTOTUNE)
+    imgs_val_preprocessed = imgs_val.map(preprocess, num_parallel_calls=AUTOTUNE)
+    imgs_test_preprocessed = imgs_test.map(preprocess, num_parallel_calls=AUTOTUNE)
+
+    lab_train, lab_val, lab_test = get_labels()
+
+    bb_df_train = build_bbox_dataframe(lab_train)
+    bb_df_val = build_bbox_dataframe(lab_val)
+    bb_df_test = build_bbox_dataframe(lab_test)
+
+    crop_train, y_train_ifsp = crop_bb(bb_df_train, imgs_train_preprocessed)
+    crop_val, y_val_ifsp = crop_bb(bb_df_val, imgs_val_preprocessed)
+    crop_test, y_test_ifsp = crop_bb(bb_df_test, imgs_test_preprocessed)
+
+    X_train_ifsp = tf.data.Dataset.from_tensor_slices(reshape_pad_crop(crop_train))
+    X_val_ifsp = tf.data.Dataset.from_tensor_slices(reshape_pad_crop(crop_val))
+    X_test_ifsp = tf.data.Dataset.from_tensor_slices(reshape_pad_crop(crop_test))
+
+    save_image_dataset(X_train_ifsp,
+                       dataset_settings.PROCESSED_DATA_PATH / "ifsp" / "train",
+                       labels=np.array(y_train_ifsp))
+    save_image_dataset(X_val_ifsp,
+                       dataset_settings.PROCESSED_DATA_PATH / "ifsp" / "val",
+                       labels=np.array(y_val_ifsp))
+    save_image_dataset(X_test_ifsp,
+                       dataset_settings.PROCESSED_DATA_PATH / "ifsp" / "test",
+                       labels=np.array(y_test_ifsp))

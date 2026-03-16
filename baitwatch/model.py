@@ -12,12 +12,12 @@ from baitwatch.settings import preprocessing_settings, model_settings
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
 
-def build_model():
+def build_model(INPUT_FORMAT = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
     """
     Build a CNN model for fonf task.
     """
     # Imput layer
-    inputs  = keras.Input(shape=(*IMG_SIZE, 3))
+    inputs  = keras.Input(shape=INPUT_FORMAT)
 
     # Normalize images
     x = keras.layers.Rescaling(scale=1./255)(inputs)
@@ -60,7 +60,7 @@ def build_model():
     x = layers.Dense(8, activation='relu')(x)                 # couche dense pour apprendre des combinaisons de features
 
     # Output layer
-    outputs = layers.Dense(1, activation='sigmoid')(x)        # probabilité fish
+    outputs = layers.Dense(output_layer[0], output_layer[1])(x)        # probabilité fish
 
     model = keras.Model(inputs, outputs)                      # assemble les couches
 
@@ -77,7 +77,8 @@ def fonf_optimizer() -> keras.optimizers.Optimizer:
 
 def compile_model(model,
                   optimizer='rmsprop',
-                  metrics=['accuracy']):
+                  loss = 'binary_crossentropy',
+                  metrics=['accuracy', 'recall']):
     """
     Compile le modèle
 
@@ -91,8 +92,8 @@ def compile_model(model,
     """
 
     model.compile(
-        optimizer= optimizer,            # ajuste les poids
-        loss='binary_crossentropy',  # mesure l'erreur
+        optimizer=optimizer,            # ajuste les poids
+        loss=loss,  # mesure l'erreur
         metrics=metrics         # % de bonnes prédictions
     )
     return model

@@ -101,9 +101,16 @@ def preprocess(eager_tensor) -> np.array:
     white_balanced_img = white_balance(img)
     processed_img = contrast_enhance(white_balanced_img)
 
-    # Resize last in case it modifies too much for previous process
-    resized_img = cv.resize(processed_img, preprocessing_settings.PREPROCESS_IMG_SIZE, interpolation=cv.INTER_LINEAR)
+    return processed_img
 
+@tf.py_function(Tout=tf.uint8)  # 8bit image
+def resize(processed_img):
+
+    processed_img = processed_img.numpy().astype("uint8")
+    # Resize last in case it modifies too much for previous process
+    resized_img = cv.resize(processed_img,
+                            preprocessing_settings.PREPROCESS_IMG_SIZE,
+                            interpolation=cv.INTER_LINEAR)
     return resized_img
 
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
