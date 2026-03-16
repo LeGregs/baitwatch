@@ -6,7 +6,7 @@ from PIL import Image
 
 from baitwatch.settings import FishDetectionEnum
 from baitwatch.main import detect_fishes
-from baitwatch.model import load_model
+from baitwatch.registry import load_model
 
 
 @asynccontextmanager

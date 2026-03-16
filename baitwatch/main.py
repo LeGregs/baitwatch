@@ -3,7 +3,8 @@ from tensorflow.data import AUTOTUNE
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess, resize
-from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
+from baitwatch.model import build_model, compile_model, train_model, get_classification_report, fonf_optimizer
+from baitwatch.registry import save_model, load_model
 from baitwatch.plot_history import plot_history
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
 from baitwatch.bbox import get_dataset_IFSP
