@@ -219,6 +219,10 @@ def load_model(
         # Only get the model file name not the full GCS Bucket path
         latest_blob_name = latest_blob.name.split("/")[-1]
 
+        # Create path if downloaded for first time
+        if not path.exists():
+            path.mkdir(parents=True)
+
         latest_model_path_to_save = path / latest_blob_name
         latest_blob.download_to_filename(latest_model_path_to_save)
 

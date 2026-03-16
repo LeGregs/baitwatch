@@ -6,6 +6,7 @@ from PIL import Image
 
 from baitwatch.settings import FishDetectionEnum
 from baitwatch.main import detect_fishes
+from baitwatch.model import load_model
 
 
 @asynccontextmanager
@@ -16,6 +17,9 @@ async def lifespan(app: FastAPI):
     and dropped when closing app.
     """
     # Startup: Initialize resources
+    app.state.models = {
+        FishDetectionEnum.FONF: load_model(FishDetectionEnum.FONF),
+    }
     yield
     # Shutdown: Clean up resources
 
