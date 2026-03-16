@@ -107,29 +107,88 @@ def preprocess(eager_tensor) -> np.array:
     return resized_img
 
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
-    """Multiplie le dataset en adaptant les lables des Bounding Boxes.
+    """
+    Applique une pipeline complète d'augmentation de données sur un tf.data.Dataset.
 
-    Opérations : Flip Left to Right, Flip Up to Down, Rotation 180°
-                 Brightness diff, Contrast diff, Saturation diff, Noise Addition.
+    Chaque échantillon (image, label) du dataset original est transformé en 8 variantes
+    distinctes (géométrie, couleur, bruit). Le dataset résultant est 8 fois plus grand.
+
+    Args:
+        dataset (tf.data.Dataset): Un dataset TensorFlow contenant des couples
+            (image, label) où label peut être une Bounding Box ou vide.
+
+    Returns:
+        tf.data.Dataset: Le dataset augmenté et "aplati" (flat_map).
     """
 
     def _augment(img, label):
+        """
+        Génère 8 variantes pour une seule paire image/label.
 
+        Gère de manière conditionnelle les labels vides pour éviter les erreurs de
+        calcul sur les coordonnées lors des transformations géométriques.
+
+        Args:
+            img (tf.Tensor): Tenseur de l'image (typiquement uint8).
+            label (tf.Tensor): Tenseur du label. Peut être de forme (5,) pour
+                [class, x, y, w, h] ou de forme (0,) si aucun poisson n'est présent.
+
+        Returns:
+            tf.data.Dataset: Un sous-dataset contenant les 8 versions augmentées.
+        """
+        # On s'assure que le label est en float32 pour les calculs de coordonnées
         label = tf.cast(label, tf.float32)
 
-        # On fait les modifs des images ET des labels
-        img_lr, lab_lr = flip_left_right_with_box(img, label)
-        img_ud, lab_ud = flip_up_down_with_box(img, label)
-        img_180, lab_180 = rot180_with_box(img, label)
-        img_br = tf.cast(tf.image.random_brightness(img, max_delta=0.4), tf.uint8)
-        img_ct = tf.cast(tf.image.random_contrast(img, lower=0.3, upper=2.0), tf.uint8)
-        img_st = tf.cast(tf.image.random_saturation(img, lower=0.0, upper=4.0), tf.uint8)
-        img_ns = add_noise(img)
+        # On vérifie si le label est vide (pas de poisson)
+        is_empty = tf.equal(tf.size(label), 0)
 
-        # On renvoie l'image originale et les 7 variantes
-        aug_imgs = [img, img_lr, img_ud, img_180, img_br, img_ct, img_st, img_ns]
-        aug_labs = [label, lab_lr, lab_ud, lab_180, label, label, label, label]
+        def augment_with_boxes():
+            """Applique les augmentations en recalculant les coordonnées des Bounding Boxes."""
+            img_lr, lab_lr = flip_left_right_with_box(img, label)
+            img_ud, lab_ud = flip_up_down_with_box(img, label)
+            img_180, lab_180 = rot180_with_box(img, label)
+
+            # FORCE LE CAST EN UINT8 ICI pour chaque transformation photométrique
+            img_br = tf.cast(tf.image.random_brightness(img, max_delta=0.8), tf.uint8)
+            img_ct = tf.cast(tf.image.random_contrast(img, lower=0.2, upper=2.5), tf.uint8)
+            img_st = tf.cast(tf.image.random_saturation(img, lower=0.0, upper=6.0), tf.uint8)
+            img_ns = tf.cast(add_noise(img), tf.uint8)
+
+            # On cast aussi l'image originale et les flips par sécurité
+            aug_imgs = [
+                tf.cast(img, tf.uint8),
+                tf.cast(img_lr, tf.uint8),
+                tf.cast(img_ud, tf.uint8),
+                tf.cast(img_180, tf.uint8),
+                img_br, img_ct, img_st, img_ns
+            ]
+            aug_labs = [label, lab_lr, lab_ud, lab_180, label, label, label, label]
+            return aug_imgs, aug_labs
+
+        def augment_empty():
+            """Applique les augmentations sur l'image seule en conservant un label vide."""
+            img_lr = tf.image.flip_left_right(img)
+            img_ud = tf.image.flip_up_down(img)
+            img_180 = tf.image.rot90(img, k=2)
+
+            img_br = tf.cast(tf.image.random_brightness(img, max_delta=0.8), tf.uint8)
+            img_ct = tf.cast(tf.image.random_contrast(img, lower=0.2, upper=2.5), tf.uint8)
+            img_st = tf.cast(tf.image.random_saturation(img, lower=0.0, upper=6.0), tf.uint8)
+            img_ns = tf.cast(add_noise(img), tf.uint8)
+
+            # Même chose ici : tout en uint8
+            aug_imgs = [
+                tf.cast(img, tf.uint8),
+                tf.cast(img_lr, tf.uint8),
+                tf.cast(img_ud, tf.uint8),
+                tf.cast(img_180, tf.uint8),
+                img_br, img_ct, img_st, img_ns
+            ]
+            aug_labs = [label] * len(aug_imgs)
+            return aug_imgs, aug_labs
+        # Utilisation de tf.cond pour basculer entre les deux logiques
+        aug_imgs, aug_labs = tf.cond(is_empty, augment_empty, augment_with_boxes)
 
         return tf.data.Dataset.from_tensor_slices((aug_imgs, aug_labs))
 
-    return dataset.map(_augment)
+    return dataset.flat_map(_augment)

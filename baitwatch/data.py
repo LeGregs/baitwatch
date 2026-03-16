@@ -236,35 +236,35 @@ def save_augmented_to_local(dataset: tf.data.Dataset, path: Path):
         - PNG images (8-bit) named 'fish_{index}.png'
         - TXT files named 'fish_{index}.txt' containing normalized YOLO coordinates.
     """
-        # 1. Dossier de destination
-    if not path.exists():
-        path.mkdir(parents=True)
-        print(f"📁 Nouveau dossier créé : {path}")
+    # 1. Définir les sous-dossiers
+    img_path = path / "augmented_images"
+    lab_path = path / "augmented_labels"
 
-    # 2. Sécurité : On ne veut pas générer 8000 images si elles y sont déjà
-    if any(path.iterdir()):
-        print(f"⚠️ Le dossier {path} n'est pas vide, pas besoin de save!")
+    # 2. Création des dossiers
+    for p in [img_path, lab_path]:
+        if not p.exists():
+            p.mkdir(parents=True)
+            print(f"📁 Dossier créé : {p}")
+
+    # 3. Sécurité : On vérifie si les dossiers sont vides
+    if any(img_path.iterdir()) or any(lab_path.iterdir()):
+        print(f"⚠️ Les dossiers dans {path} ne sont pas vides, arrêt de la sauvegarde.")
         return
 
-    print("🚀 Sauvegarde du dataset augmenté en local...")
+    print("🚀 Sauvegarde du dataset augmenté (Images + Labels)...")
 
-    # 3. Boucle d'export
     for index, (img_tensor, label_tensor) in enumerate(dataset):
-
-        # SAUVEGARDE IMAGE
+        # SAUVEGARDE IMAGE -> dans augmented_images
         img_np = img_tensor.numpy().astype("uint8")
         image = Image.fromarray(img_np)
-        img_file = path / f"fish_{index}.png"
-        image.save(img_file)
+        image.save(img_path / f"fish_{index}.png")
 
-        # SAUVEGARDE LABEL
-        # On extrait les valeurs [class, x, y, w, h]
+        # SAUVEGARDE LABEL -> dans augmented_labels
         label_data = label_tensor.numpy()
-        # On prépare la ligne format YOLO : "0 0.5 0.5 0.2 0.2"
+        # Si le label est vide, write_text créera un fichier vide (OK pour YOLO)
         label_line = " ".join([f"{x:.6f}" if i > 0 else f"{int(x)}" for i, x in enumerate(label_data)])
 
-        txt_file = path / f"fish_{index}.txt"
-        # Syntaxe Pathlib pour écrire du texte sans ouvrir de context manager complexe
+        txt_file = lab_path / f"fish_{index}.txt"
         txt_file.write_text(label_line)
 
-    print(f"✅ Terminé ! {index + 1} couples images/labels sauvegardés.")
+    print(f"✅ Terminé ! {index + 1} couples sauvegardés dans {path}")

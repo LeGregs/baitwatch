@@ -23,7 +23,6 @@ class FishDetectionEnum(str, Enum):
 class DatasetSettings(BaseSettings):
     RAW_DATA_PATH: DirectoryPath = PROJECT_PATH / "raw_data"
     PROCESSED_DATA_PATH: DirectoryPath = PROJECT_PATH / "processed_data"
-    # AUGMENTED_DATA_PATH = PROJECT_PATH / "augmented_data"
     ORIGINAL_SIZE: tuple[int, int] = (1080, 1920)  # Tensorflow: height width
 
 
