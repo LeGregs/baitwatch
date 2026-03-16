@@ -1,17 +1,15 @@
 import numpy as np
 from PIL import ImageFile
-from tensorflow.keras import Model
 from tensorflow.data import Dataset
+from tensorflow.keras import Model
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
-from baitwatch.preprocessing import get_preprocessed_ds
-from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
-from baitwatch.preprocessing import preprocess, resize
 from baitwatch.model import build_model, compile_model, train_model, get_classification_report, fonf_optimizer
-from baitwatch.registry import save_model, load_model
 from baitwatch.plot_history import plot_history
+from baitwatch.preprocessing import get_preprocessed_ds
+from baitwatch.preprocessing import resize
+from baitwatch.registry import save_model, load_model
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
-from baitwatch.bbox import get_dataset_IFSP
 
 
 def download_data():
@@ -40,7 +38,6 @@ def preprocess_dataset():
 
 
 def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-
     if model_type == FishDetectionEnum.FONF:
         X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
         model = build_model()
@@ -54,7 +51,7 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
                                                         image_size=dataset_settings.CROP_IMG_SIZE,
                                                         label_mode='categorical')
 
-        model = build_model(INPUT_FORMAT=(105,256,3), output_layer=(8,'softmax'))
+        model = build_model(INPUT_FORMAT=(105, 256, 3), output_layer=(8, 'softmax'))
         optimizer = fonf_optimizer()
         model = compile_model(model,
                               loss='categorical_crossentropy',
@@ -67,15 +64,15 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
 
 
 def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
+    model = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
     _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
 
     results = model.evaluate(X_test_ds, return_dict=True)
     print(results)
 
 
-def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name:str = "") -> None:
-    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
+def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF, model_name: str = "") -> None:
+    model = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
 
     if model_type != 'fonf':
         label_mode = 'categorical'
