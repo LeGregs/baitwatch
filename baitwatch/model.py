@@ -9,7 +9,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report
 from google.cloud import storage
 
-from baitwatch.settings import preprocessing_settings, model_settings, cloud_settings
+from baitwatch.settings import preprocessing_settings, model_settings, cloud_settings, FishDetectionEnum
 
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
@@ -147,7 +147,7 @@ def train_model(model,
 
 def save_model(
     model: keras.Model,
-    model_type: str,
+    model_type: FishDetectionEnum,
     path: Path = model_settings.MODEL_LOCAL_PATH
 ) -> None:
     """Save the given model in given path and in the Cloud."""
@@ -175,7 +175,7 @@ def save_model(
 
 
 def load_model(
-    model_type: str,
+    model_type: FishDetectionEnum,
     path: Path = model_settings.MODEL_LOCAL_PATH,
     model_name: str = ""
 ) -> keras.Model:
