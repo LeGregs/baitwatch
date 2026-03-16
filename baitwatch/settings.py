@@ -19,9 +19,11 @@ class FishDetectionEnum(str, Enum):
     """Supported type of fish detection.
 
     FONF: Fish Or No Fish
+    IFSP = Individual Fish Species Prediction
     """
     FONF = "fonf"
-
+    IFSP = "ifsp"
+    WAW = "waw"
 
 class DatasetSettings(BaseSettings):
     """Settings about dataset used for training."""
@@ -29,11 +31,13 @@ class DatasetSettings(BaseSettings):
     PROCESSED_DATA_PATH: DirectoryPath = PROJECT_PATH / "processed_data"
     # AUGMENTED_DATA_PATH = PROJECT_PATH / "augmented_data"
     ORIGINAL_SIZE: tuple[int, int] = (1080, 1920)  # Tensorflow: height width
+    CROP_IMG_SIZE: tuple[int, int] = (105, 256) # Tensorflow: height width
 
 
 class PreprocessingSettings(BaseSettings):
     """Settings for preprocessing."""
     PREPROCESS_IMG_SIZE: tuple[int, int] = (256, 144)  # OpenCV: width height
+
 
 
 class ModelSettings(BaseSettings):
