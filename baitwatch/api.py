@@ -44,11 +44,18 @@ async def detect(detection_type: FishDetectionEnum, image_file: UploadFile):
     - **image_file** (UploadFile): image to detect fishes from.
     - Returns: Nothing for now
     """
+    # Ensure Enum object is used
+    detection_type = FishDetectionEnum(detection_type)
+
+    # Cast file into image file
     contents = await image_file.read()
     image = Image.open(io.BytesIO(contents)).convert('RGB')
-    model = app.state.models.get(detection_type.value)
+
+    # Get associated model
+    model = app.state.models.get(detection_type, None)
     if model is None:
         return {"error": f"No model found for detection type {detection_type.value}"}
+
     return detect_fishes(model, image)
 
 
