@@ -3,12 +3,16 @@
 from pathlib import Path
 from enum import Enum
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from pydantic import DirectoryPath
 
 
 PROJECT_PATH = Path(__file__).absolute().parent.parent
 DATASET_NAME = "training_data_species_grouped"
+
+# Load environment variable to overwrite default settings
+load_dotenv(PROJECT_PATH / ".env")
 
 
 class FishDetectionEnum(str, Enum):
