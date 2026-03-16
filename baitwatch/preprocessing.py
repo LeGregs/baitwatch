@@ -1,4 +1,11 @@
-"""Preprocessing of images before training/predicitons."""
+"""
+Baitwatch — Preprocessing
+white_balance : correction auto de la balance des blancs
+contrast_enhance : amélioration auto du contraste
+flip/rot/noise : augmentation des images avec adaptation des labels
+preprocess : pipeline complète de preprocessing (white balance → contraste → resize)
+augment_preprocess : multiplie le dataset x8 avec augmentations
+"""
 
 import numpy as np
 import cv2 as cv
@@ -8,16 +15,8 @@ from baitwatch.settings import preprocessing_settings
 
 
 def white_balance(img: np.array) -> np.array:
-    """Apply an automatic white balance on image.
+    """Applique une balance des blancs automatique (espace LAB)."""
 
-    Input image is expected to come from tensorflow, which is in RGB.
-
-    Args:
-        img: RGB image in 8 bits numpy format
-
-    Returns:
-        White balanced image in numpy format
-    """
     # Use LAB color space to avoid modifying luminance of image
     result = cv.cvtColor(img, cv.COLOR_RGB2LAB)
     # White balance by averaging colors instead of gray method
@@ -31,16 +30,8 @@ def white_balance(img: np.array) -> np.array:
 
 
 def contrast_enhance(img: np.array) -> np.array:
-    """Apply an automatic contrast enhancement on image.
+    """Améliore le contraste via normalisation + égalisation d'histogramme (espace YCrCb)."""
 
-    Input image is expected to come from tensorflow, which is in RGB.
-
-    Args:
-        img: RGB image in 8 bits numpy format
-
-    Returns:
-        White balanced image in numpy format
-    """
     # Use YCrCb color space to keep luminance
     ycrcb = cv.cvtColor(img, cv.COLOR_RGB2YCrCb)
     y, cr, cb = cv.split(ycrcb)
@@ -58,6 +49,7 @@ def contrast_enhance(img: np.array) -> np.array:
 
 # Augment images
 def flip_left_right_with_box(image, label):
+    """Flip horizontal de l'image + adaptation du label (x_center inversé)."""
 
     # Image
     img = tf.image.flip_left_right(image)
@@ -70,19 +62,24 @@ def flip_left_right_with_box(image, label):
     return img, new_label
 
 def flip_up_down_with_box(image, label):
+    """Flip vertical de l'image + adaptation du label (y_center inversé)."""
+
     img = tf.image.flip_up_down(image)
     # Box: y_center devient (1 - y_center)
     new_label = tf.stack([label[0], label[1], 1.0 - label[2], label[3], label[4]])
     return img, new_label
 
 def rot180_with_box(image, label):
+    """Rotation 180° de l'image + adaptation du label (x et y inversés)."""
+
     img = tf.image.rot90(image, k=2)
     # Box: x et y sont inversés
     new_label = tf.stack([label[0], 1.0 - label[1], 1.0 - label[2], label[3], label[4]])
     return img, new_label
 
 def add_noise(image: tf.Tensor) -> tf.Tensor:
-    """Ajoute du bruit aléatoire à l'image."""
+    """Ajoute du bruit gaussien aléatoire à l'image."""
+
     noise = tf.random.normal(shape=tf.shape(image), mean=0.0, stddev=25.0, dtype=tf.float32)
     return tf.clip_by_value(tf.cast(image, tf.float32) + noise, 0, 255)
 
@@ -90,10 +87,11 @@ def add_noise(image: tf.Tensor) -> tf.Tensor:
 # see https://www.tensorflow.org/api_docs/python/tf/py_function
 @tf.py_function(Tout=tf.uint8)  # 8bit image
 def preprocess(eager_tensor) -> np.array:
-    """Full preprocessing pipeline for an image.
-
-    Expected to be mapped to a ft.data.Dataset of EagerTensor.
     """
+    Pipeline complète de preprocessing pour une image :
+    white balance → contraste → resize.
+    """
+
     # DO NOT MODIFY: Cast eager tensor into an OpenCV readable raw image
     img = eager_tensor.numpy().astype("uint8")
 
@@ -107,11 +105,13 @@ def preprocess(eager_tensor) -> np.array:
     return resized_img
 
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
-    """Multiplie le dataset en adaptant les lables des Bounding Boxes.
-
-    Opérations : Flip Left to Right, Flip Up to Down, Rotation 180°
-                 Brightness diff, Contrast diff, Saturation diff, Noise Addition.
     """
+    Multiplie le dataset x8 avec augmentations :
+    original + flip LR + flip UD + rot180 + brightness + contrast + saturation + noise.
+    Les labels des bounding boxes sont adaptés pour les transformations géométriques.
+    """
+
+    print("🔄 Augmentation du dataset (x8 par image)...")
 
     def _augment(img, label):
 
