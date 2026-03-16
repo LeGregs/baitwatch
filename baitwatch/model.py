@@ -77,7 +77,8 @@ def fonf_optimizer() -> keras.optimizers.Optimizer:
 
 def compile_model(model,
                   optimizer='rmsprop',
-                  metrics=['accuracy']):
+                  loss = 'binary_crossentropy',
+                  metrics=['accuracy', 'recall']):
     """
     Compile le modèle
 
@@ -91,8 +92,8 @@ def compile_model(model,
     """
 
     model.compile(
-        optimizer= optimizer,            # ajuste les poids
-        loss='binary_crossentropy',  # mesure l'erreur
+        optimizer=optimizer,            # ajuste les poids
+        loss=loss,  # mesure l'erreur
         metrics=metrics         # % de bonnes prédictions
     )
     return model
