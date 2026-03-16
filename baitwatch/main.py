@@ -4,7 +4,7 @@ from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
-from baitwatch.model import build_model, compile_model, train_model, get_classification_report, fonf_optimizer
+from baitwatch.model import build_model, train_model, get_classification_report, fonf_optimizer
 from baitwatch.plot_history import plot_history
 from baitwatch.preprocessing import get_preprocessed_ds
 from baitwatch.preprocessing import resize
