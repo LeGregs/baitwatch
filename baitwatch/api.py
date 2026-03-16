@@ -18,7 +18,9 @@ async def lifespan(app: FastAPI):
     and dropped when closing app.
     """
     # Startup: Initialize resources
-    app.state.models.fonf = load_model(FishDetectionEnum.FONF)
+    app.state.models = {
+        FishDetectionEnum.FONF: load_model(),
+    }
     yield
     # Shutdown: Clean up resources
 
@@ -44,7 +46,7 @@ async def detect(detection_type: FishDetectionEnum, image_file: UploadFile):
     - Returns: Nothing for now
     """
     contents = await image_file.read()
-    image = Image.open(io.BytesIO(contents))
+    image = Image.open(io.BytesIO(contents)).convert('RGB')
     model = app.state.models.get(detection_type.value)
     if model is None:
         return {"error": f"No model found for detection type {detection_type.value}"}

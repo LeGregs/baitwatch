@@ -1,5 +1,7 @@
-from PIL import Image
+import numpy as np
+from PIL import ImageFile
 from tensorflow.keras import Model
+from tensorflow.data import Dataset
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import get_preprocessed_ds
@@ -64,8 +66,10 @@ def run_cycle(task_type: FishDetectionEnum = FishDetectionEnum.FONF) -> None:
     classification_report(task_type)
 
 
-def detect_fishes(model: Model, image: Image) -> None:
+def detect_fishes(model: Model, image: ImageFile.ImageFile) -> None:
     # Perform preprocessing
-
+    image_ds = Dataset.from_tensor_slices([np.array(image)])
+    image_preprocessed = get_preprocessed_ds(image_ds)
     # Perform detection
-    return
+    results = model.predict(image_preprocessed)
+    return results

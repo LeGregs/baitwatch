@@ -7,7 +7,7 @@ import tensorflow as tf
 from baitwatch.settings import preprocessing_settings
 
 
-def white_balance(img: np.array) -> np.array:
+def white_balance(img: np.ndarray) -> np.ndarray:
     """Apply an automatic white balance on image.
 
     Input image is expected to come from tensorflow, which is in RGB.
@@ -30,7 +30,7 @@ def white_balance(img: np.array) -> np.array:
     return result
 
 
-def contrast_enhance(img: np.array) -> np.array:
+def contrast_enhance(img: np.ndarray) -> np.ndarray:
     """Apply an automatic contrast enhancement on image.
 
     Input image is expected to come from tensorflow, which is in RGB.
@@ -89,7 +89,7 @@ def add_noise(image: tf.Tensor) -> tf.Tensor:
 # To be applied to a tf.data.Dataset using 'map',
 # see https://www.tensorflow.org/api_docs/python/tf/py_function
 @tf.py_function(Tout=tf.uint8)  # 8bit image
-def preprocess(eager_tensor) -> np.array:
+def preprocess(eager_tensor) -> np.ndarray:
     """Full preprocessing pipeline for an image.
 
     Expected to be mapped to a ft.data.Dataset of EagerTensor.
