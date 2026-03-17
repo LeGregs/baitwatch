@@ -21,6 +21,8 @@ class PredictionResult(BaseModel):
         probability = max(res)
         if len(res) == 1:
             class_id = 1 if probability > 0.5 else 0
+            # Reverse probability when class 0
+            probability = probability if class_id else 1 - probability
         else:
             class_id = np.argmax(res)
         return PredictionResult(probability=probability, class_id=class_id)
