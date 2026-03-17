@@ -1,4 +1,11 @@
-"""Preprocessing of images before training/predicitons."""
+"""
+Baitwatch — Preprocessing
+white_balance : correction auto de la balance des blancs
+contrast_enhance : amélioration auto du contraste
+flip/rot/noise : augmentation des images avec adaptation des labels
+preprocess : pipeline complète de preprocessing (white balance → contraste → resize)
+augment_preprocess : multiplie le dataset x8 avec augmentations
+"""
 
 import cv2 as cv
 import numpy as np
@@ -57,6 +64,7 @@ def contrast_enhance(img: np.ndarray) -> np.ndarray:
 
 # Augment images
 def flip_left_right_with_box(image, label):
+    """Horizontal flip of the image + label adaptation (x_center inverted)."""
     # Image
     img = tf.image.flip_left_right(image)
     # Box: x_center devient (1 - x_center). y, w, h ne changent pas.
@@ -69,6 +77,8 @@ def flip_left_right_with_box(image, label):
 
 
 def flip_up_down_with_box(image, label):
+    """Vertical flip of the image + label adaptation (y_center inverted)."""
+
     img = tf.image.flip_up_down(image)
     # Box: y_center devient (1 - y_center)
     new_label = tf.stack([label[0], label[1], 1.0 - label[2], label[3], label[4]])
@@ -76,6 +86,8 @@ def flip_up_down_with_box(image, label):
 
 
 def rot180_with_box(image, label):
+    """180° rotation of the image + label adaptation (x and y inverted)."""
+
     img = tf.image.rot90(image, k=2)
     # Box: x et y sont inversés
     new_label = tf.stack([label[0], 1.0 - label[1], 1.0 - label[2], label[3], label[4]])
@@ -83,17 +95,20 @@ def rot180_with_box(image, label):
 
 
 def add_noise(image: tf.Tensor) -> tf.Tensor:
-    """Ajoute du bruit aléatoire à l'image."""
+    """Add random noise to the image."""
+
     noise = tf.random.normal(shape=tf.shape(image), mean=0.0, stddev=25.0, dtype=tf.float32)
     return tf.clip_by_value(tf.cast(image, tf.float32) + noise, 0, 255)
 
 
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
-    """Multiplie le dataset en adaptant les lables des Bounding Boxes.
+    """Multiply the dataset by adapting the Bounding Box labels.
 
-    Opérations : Flip Left to Right, Flip Up to Down, Rotation 180°
-                 Brightness diff, Contrast diff, Saturation diff, Noise Addition.
+    Operations: Flip Left to Right, Flip Up to Down, 180° Rotation,
+                Brightness diff, Contrast diff, Saturation diff, Noise Addition.
     """
+
+    print("🔄 Augmentation du dataset (x8 par image)...")
 
     def _augment(img, label):
         label = tf.cast(label, tf.float32)
@@ -117,7 +132,6 @@ def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
 
 
 def preprocess_ds(dataset: tf.data.Dataset) -> tf.data.Dataset:
-
     # To be applied to a tf.data.Dataset using 'map',
     # see https://www.tensorflow.org/api_docs/python/tf/py_function
     @tf.py_function(Tout=tf.uint8)  # 8bit image

@@ -1,3 +1,8 @@
+"""
+Baitwatch — Visualisation
+plot_history : affiche les courbes accuracy et loss (train vs validation)
+"""
+
 import matplotlib.pyplot as plt
 
 
@@ -8,6 +13,9 @@ def plot_history(history):
     Args :
         history : historique retourné par model.fit()
     """
+
+    print("📊 Génération des courbes d'entraînement...")
+
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
     # ── Accuracy ─────────────────────────────────────────
@@ -31,3 +39,5 @@ def plot_history(history):
     plt.suptitle('Progression de l\'entraînement', fontsize=14)
     plt.tight_layout()
     plt.show()
+
+    print("✅ Courbes affichées")
