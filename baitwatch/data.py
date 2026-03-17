@@ -231,9 +231,28 @@ def dl_augmented_images(
         print("✅ Augmented data downloaded !")
     else :
         print("✅ You already have the augmented data !")
-        
 
-def save_augmented_to_local(dataset: tf.data.Dataset, model_name : str , split : str):
+
+def save_augmented_to_local(dataset: tf.data.Dataset, model_name: str , split: str):
+
+    """
+    Applies data augmentation to a dataset and saves the results to local storage.
+
+    This function processes an input dataset using a flat_map transformation to
+    generate multiple augmented variations (images and labels) for every original
+    sample. It then collects these variations into memory and exports them as
+    individual files using the project's standardized saving utility.
+
+    Args:
+        dataset (tf.data.Dataset): The input dataset containing (image, label) pairs.
+            It is recommended to unbatch the dataset before passing it to this function.
+        model_name (str): The name of the model/species task (e.g., 'ifsp', 'fonf'),
+            used to define the output directory.
+        split (str): The dataset split being processed (e.g., 'train', 'val', or 'test').
+
+    Returns:
+        None: Saves the augmented dataset to the path defined in dataset_settings.
+    """
     dataset_aug = dataset.flat_map(lambda x, y : augment_images(x,y))
 
     images = []
