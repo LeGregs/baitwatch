@@ -61,6 +61,7 @@ def contrast_enhance(img: np.ndarray) -> np.ndarray:
     enhanced_image = cv.cvtColor(enhanced_ycrcb, cv.COLOR_YCrCb2RGB)
     return enhanced_image
 
+<<<<<<< Updated upstream:baitwatch/models/commons/preprocessing.py
 
 # Augment images
 def flip_left_right_with_box(image, label):
@@ -99,8 +100,11 @@ def add_noise(image: tf.Tensor) -> tf.Tensor:
 
     noise = tf.random.normal(shape=tf.shape(image), mean=0.0, stddev=25.0, dtype=tf.float32)
     return tf.clip_by_value(tf.cast(image, tf.float32) + noise, 0, 255)
+=======
+>>>>>>> Stashed changes:baitwatch/preprocessing.py
 
 
+<<<<<<< Updated upstream:baitwatch/models/commons/preprocessing.py
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
 <<<<<<< HEAD:baitwatch/preprocessing.py
     """
@@ -240,3 +244,6 @@ def resize_ds(
 
     return dataset.map(resize, num_parallel_calls=tf.data.AUTOTUNE)
 >>>>>>> 129d05414d35b002f5bd78a9a749aeaef303e25b:baitwatch/models/commons/preprocessing.py
+=======
+
+>>>>>>> Stashed changes:baitwatch/preprocessing.py

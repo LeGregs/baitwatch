@@ -9,6 +9,7 @@ run_cycle : exécute le cycle complet (download → preprocess → train → rep
 detect_fishes : détection de poissons sur une image
 """
 
+<<<<<<< Updated upstream
 import numpy as np
 from PIL import ImageFile
 from tensorflow.data import Dataset
@@ -39,6 +40,14 @@ DETECTION_TYPE_TO_OUTPUT_LAYER = {
     FishDetectionEnum.FONF: (1, "sigmoid"),
     FishDetectionEnum.IFSP: (8, 'softmax'),
 }
+=======
+from baitwatch.data import dl_data, get_images, get_labels, save_image_dataset, get_target_fonf, get_processed_dataset
+from baitwatch.preprocessing import preprocess, resize
+from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
+from baitwatch.plot_history import plot_history
+from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
+from baitwatch.bbox import get_dataset_IFSP, build_bbox_dataframe, crop_bb, reshape_pad_crop
+>>>>>>> Stashed changes
 
 
 def download_data():
