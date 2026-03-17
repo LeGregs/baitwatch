@@ -1,3 +1,10 @@
+"""
+Baitwatch — Bounding Box Pipeline
+build_bbox_dataframe : parse les labels YOLO → DataFrame
+crop_bb : crop les bounding boxes depuis les images
+reshape_pad_crop : resize + pad les crops au format cible
+"""
+
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -12,9 +19,16 @@ from baitwatch.preprocessing import preprocess
 from baitwatch.data import save_image_dataset
 
 
-def build_bbox_dataframe(labels_dataset,IMG_SIZE=(1920,1080)):
+def build_bbox_dataframe(labels_dataset, IMG_SIZE=(1920, 1080)):
+    """
+    Reads YOLO label files and returns a DataFrame
+    with the pixel coordinates of each bounding box.
+    """
     IMG_W, IMG_H = IMG_SIZE
     rows = []
+
+    print("📄 Reading YOLO's labels...")
+
     for idx, txt in enumerate(labels_dataset.as_numpy_iterator()):
         txt = txt.decode("utf-8").strip()
         if txt == "":
@@ -23,9 +37,9 @@ def build_bbox_dataframe(labels_dataset,IMG_SIZE=(1920,1080)):
             parts = line.split(" ")
             class_id = int(parts[0])
             center_x = float(parts[1]) * IMG_W
-            center_y = float(parts[2])* IMG_H
-            w = float(parts[3])* IMG_W
-            h = float(parts[4])* IMG_H
+            center_y = float(parts[2]) * IMG_H
+            w = float(parts[3]) * IMG_W
+            h = float(parts[4]) * IMG_H
             rows.append({
                 "file_idx": idx,
                 "class_id": class_id,
@@ -35,16 +49,28 @@ def build_bbox_dataframe(labels_dataset,IMG_SIZE=(1920,1080)):
                 "height": h,
                 "area": w * h
             })
+
+    print(f"✅ {len(rows)} bounding boxes extracted from {idx + 1} fichiers labels")
+
     return pd.DataFrame(rows)
 
 
-
 def crop_bb(labels_bb_df, img_dataset):
+    """
+    Crop each bounding box from the images.
+    Returns the list of crops (np.array) and their class_id.
+    """
     cropped_img = []
     class_bb = []
     img_df = []
+
+    print("✂️  Loading images into memory...")
+
     for ten in img_dataset:
         img_df.append(ten.numpy())
+
+    print(f"   {len(img_df)} images loaded")
+    print("🔲 Cropping bounding boxes...")
 
     for bb in range(len(labels_bb_df)):
         num_img = labels_bb_df.iloc[bb]['file_idx']
@@ -60,13 +86,20 @@ def crop_bb(labels_bb_df, img_dataset):
             int(center_x - width/2) : int(center_x + width/2) + 1,:])
         class_bb.append(int(labels_bb_df.iloc[bb]["class_id"]))
 
+    print(f"✅ {len(cropped_img)} crops generated")
+
     return cropped_img, class_bb
 
 
-
-
-def reshape_pad_crop(cropped_img, format_img = (105,256)):
+def reshape_pad_crop(cropped_img, format_img=(105, 256)):
+    """
+    Resize each crop while keeping the aspect ratio,
+    then pad to reach the target format (h, w).
+    """
     bb_crop_fin = []
+
+    print(f"📐 Resize + pad crops to {format_img}...")
+
     for img in cropped_img:
         img_proc = img.astype("uint8")
 
@@ -79,6 +112,9 @@ def reshape_pad_crop(cropped_img, format_img = (105,256)):
                                 format_img[1] - img_resize.shape[1],
                                 format_img[0],
                                 format_img[1]))
+
+    print(f"✅ {len(bb_crop_fin)} crops resized to {format_img}")
+
     return bb_crop_fin
 
 
