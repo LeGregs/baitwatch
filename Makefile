@@ -16,10 +16,10 @@ run_dl_data:
 	python -c 'from baitwatch.main import download_data; download_data()'
 
 run_preprocess_fonf:
-	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset("fonf")'
+	python -c 'from baitwatch.main import preprocess_data; preprocess_data("fonf")'
 
 run_preprocess_ifsp:
-	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset("ifsp")'
+	python -c 'from baitwatch.main import preprocess_data; preprocess_data("ifsp")'
 
 run_train_fonf:
 	python -c 'from baitwatch.main import train; train("fonf")'
