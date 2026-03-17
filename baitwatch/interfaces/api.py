@@ -7,8 +7,8 @@ from fastapi import FastAPI, UploadFile
 
 from baitwatch.domains.prediction_result import PredictionResult
 from baitwatch.main import detect_fishes
-from baitwatch.registry import load_model
-from baitwatch.settings import FishDetectionEnum
+from baitwatch.infra.registry import load_model
+from baitwatch.domains.fish_detection import FishDetectionEnum
 
 
 @asynccontextmanager

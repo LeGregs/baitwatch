@@ -1,22 +1,35 @@
-from pathlib import Path
 from typing import Callable
 
+import keras
 import numpy as np
 from tensorflow.data import Dataset
 
+from baitwatch.models.fonf.model import (
+    build_model as fonf_model,
+    get_optimizer as fonf_optimizer,
+    compile_model as fonf_compile_model
+)
 from baitwatch.models.fonf.preprocessing import process_data_fonf, preprocess_fonf
+from baitwatch.models.ifsp.model import (
+    build_model as ifsp_model,
+    get_optimizer as ifsp_optimizer,
+    compile_model as ifsp_compile_model
+)
 from baitwatch.models.ifsp.preprocessing import process_data_ifsp, preprocess_ifsp
-from baitwatch.settings import FishDetectionEnum
+from baitwatch.domains.fish_detection import FishDetectionEnum
 
 __all__ = [
     "process_data",
-    "get_preprocess"
+    "get_preprocess",
+    "get_build_model",
+    "get_optimizer",
+    "get_compiled_model",
 ]
 
 
 def process_data(
         detection_type: FishDetectionEnum,
-) -> Callable[[Path, tuple[int, int]], tuple[Dataset, np.ndarray, Dataset, np.ndarray, Dataset, np.ndarray]]:
+) -> Callable[[Dataset, Dataset], tuple[Dataset, np.ndarray]]:
     detection_to_processed_imgs = {
         FishDetectionEnum.FONF: process_data_fonf,
         FishDetectionEnum.IFSP: process_data_ifsp,
@@ -32,3 +45,30 @@ def get_preprocess(detection_type: FishDetectionEnum) -> Callable[[Dataset], Dat
     }
 
     return detection_to_process_pipeline[detection_type]
+
+
+def get_build_model(detection_type: FishDetectionEnum) -> keras.models.Model:
+    detection_to_model_builder = {
+        FishDetectionEnum.FONF: fonf_model,
+        FishDetectionEnum.IFSP: ifsp_model,
+    }
+    # Only build when requested, also rebuild when requested
+    return detection_to_model_builder[detection_type]()
+
+
+def get_optimizer(detection_type: FishDetectionEnum) -> keras.optimizers.Optimizer:
+    detection_to_optimizer = {
+        FishDetectionEnum.FONF: fonf_optimizer,
+        FishDetectionEnum.IFSP: ifsp_optimizer,
+    }
+    return detection_to_optimizer[detection_type]()
+
+
+def get_compiled_model(detection_type: FishDetectionEnum) -> keras.models.Model:
+    detection_to_model_compile = {
+        FishDetectionEnum.FONF: fonf_compile_model,
+        FishDetectionEnum.IFSP: ifsp_compile_model,
+    }
+    model = get_build_model(detection_type)
+    optimizer = get_optimizer(detection_type)
+    return detection_to_model_compile[detection_type](model, optimizer)

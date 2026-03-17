@@ -14,31 +14,20 @@ from PIL import ImageFile
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
-from baitwatch.data import dl_data, save_image_dataset, get_processed_dataset
-from baitwatch.model import build_model, train_model, get_classification_report, fonf_optimizer
-from baitwatch.models import process_data, get_preprocess
-from baitwatch.plot_history import plot_history
-from baitwatch.registry import save_model, load_model
-from baitwatch.data import save_augmented_to_local
-from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, fonf_settings, DATASET_NAME, \
+from baitwatch.domains.fish_detection import FishDetectionEnum
+from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset, get_images, get_labels, save_augmented_to_local
+from baitwatch.infra.registry import save_model, load_model
+from baitwatch.models import process_data, get_preprocess, get_compiled_model
+from baitwatch.models.commons.augment import augment_ds
+from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
+from baitwatch.settings import dataset_settings, model_settings, fonf_settings, DATASET_NAME, \
     ifsp_settings
 
-# Define how to load labels, depending on bi-class or multi-class
-DETECTION_TYPE_TO_LABEL = {
-    FishDetectionEnum.FONF: "int",
-    FishDetectionEnum.IFSP: "categorical",
-}
-
 # Define image sizes
+# REMEMBER Preprocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 DETECTION_TYPE_TO_IMG_SIZE = {
     FishDetectionEnum.FONF: fonf_settings.PREPROCESS_IMG_SIZE[::-1],
     FishDetectionEnum.IFSP: ifsp_settings.CROP_IMG_SIZE,
-}
-
-# Defin output layers
-DETECTION_TYPE_TO_OUTPUT_LAYER = {
-    FishDetectionEnum.FONF: (1, "sigmoid"),
-    FishDetectionEnum.IFSP: (8, 'softmax'),
 }
 
 
@@ -54,13 +43,17 @@ def preprocess_data(task_type: FishDetectionEnum):
 
     print("🔧 Starting dataset preprocessing...")
     task_type = FishDetectionEnum(task_type)
-    processor = process_data(task_type)
+    imgs_train, imgs_val, imgs_test = get_images(
+        directory_path=dataset_settings.RAW_DATA_PATH / DATASET_NAME,
+        image_size=dataset_settings.ORIGINAL_SIZE,
+    )
+    labels_train, labels_val, labels_test = get_labels(directory_path=dataset_settings.RAW_DATA_PATH / DATASET_NAME)
 
     print("   Preprocessing images...")
-    x_train, y_train, x_val, y_val, x_test, y_test = processor(
-        dataset_settings.RAW_DATA_PATH / DATASET_NAME,
-        dataset_settings.ORIGINAL_SIZE
-    )
+    processor = process_data(task_type)
+    x_train, y_train = processor(imgs_train, labels_train)
+    x_val, y_val = processor(imgs_val, labels_val)
+    x_test, y_test = processor(imgs_test, labels_test)
 
     print("💾 Saving preprocessed datasets...")
     save_image_dataset(x_train, dataset_settings.PROCESSED_DATA_PATH / task_type.value / "train", labels=y_train)
@@ -72,35 +65,17 @@ def preprocess_data(task_type: FishDetectionEnum):
 
 def train(model_type: FishDetectionEnum):
     """Construit, compile et entraîne le modèle, puis sauvegarde + affiche les courbes."""
-    print(f"🏋️ Entraînement du modèle ({model_type})...")
+    print(f"🏋️ Train model({model_type})...")
     # Cast str as Enum object (from Make)
     model_type = FishDetectionEnum(model_type)
 
-    x_train_ds, x_val_ds, _ = get_processed_dataset(
-        dataset_settings.PROCESSED_DATA_PATH / model_type.value,
-        image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
-        label_mode=DETECTION_TYPE_TO_LABEL[model_type]
-    )
+    x_train_ds, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
+                                                    image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
-    optimizer = fonf_optimizer()
-    model = build_model(
-        input_format=(*DETECTION_TYPE_TO_IMG_SIZE[model_type], 3),
-        output_layer=DETECTION_TYPE_TO_OUTPUT_LAYER[model_type],
-    )
+    print(f"🛠️️ Building model {model_type}...")
+    model = get_compiled_model(model_type)
 
-    if model_type is FishDetectionEnum.FONF:
-        model.compile(
-            optimizer=optimizer,
-            loss='binary_crossentropy',
-            metrics=["accuracy", "recall", "precision", "AUC"],
-        )
-
-    if model_type is FishDetectionEnum.IFSP:
-        model.compile(
-            loss='categorical_crossentropy',
-            optimizer=optimizer,
-            metrics=["accuracy", "recall", "precision", "AUC"])
-
+    print("👟   Training model...")
     history, model = train_model(model, x_train_ds, validation_data=x_val_ds)
 
     print("💾 Saving model...")
@@ -118,11 +93,8 @@ def evaluate(model_type: FishDetectionEnum):
     model_type = FishDetectionEnum(model_type)
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
 
-    _, _, x_test_ds = get_processed_dataset(
-        dataset_settings.PROCESSED_DATA_PATH / model_type.value,
-        image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
-        label_mode=DETECTION_TYPE_TO_LABEL[model_type],
-    )
+    _, _, x_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
+                                            image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
     results = model.evaluate(x_test_ds, return_dict=True)
     print(results)
@@ -137,8 +109,7 @@ def classification_report(model_type: FishDetectionEnum, model_name: str = "") -
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
 
     _, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
-                                           image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
-                                           label_mode=DETECTION_TYPE_TO_LABEL[model_type])
+                                           image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
     print(get_classification_report(model, x_val_ds))
 
@@ -180,6 +151,7 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
     results = model.predict(image_preprocessed.batch(1))
     return results
 
+
 def save_augmented():
     """
     Orchestrates the augmentation and local storage of the IFSP dataset splits.
@@ -193,11 +165,17 @@ def save_augmented():
     The resulting augmented images and labels are stored in subdirectories
     corresponding to their respective model types and splits.
     """
-    X_train, X_val, X_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
-                                                  image_size= ifsp_settings.CROP_IMG_SIZE)
+    x_train, x_val, x_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / FishDetectionEnum.IFSP.value,
+                                                   image_size=ifsp_settings.CROP_IMG_SIZE)
 
-    save_augmented_to_local(X_train, 'ifsp', 'train')
+    # Augment images
+    x_train = augment_ds(x_train)
+    x_val = augment_ds(x_val)
+    x_test = augment_ds(x_test)
 
-    save_augmented_to_local(X_val, 'ifsp', 'val')
+    # Save
+    save_augmented_to_local(x_train, FishDetectionEnum.IFSP.value, 'train')
 
-    save_augmented_to_local(X_test, 'ifsp', 'test')
+    save_augmented_to_local(x_val, FishDetectionEnum.IFSP.value, 'val')
+
+    save_augmented_to_local(x_test, FishDetectionEnum.IFSP.value, 'test')

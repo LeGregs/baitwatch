@@ -1,6 +1,5 @@
 """Project Settings"""
 
-from enum import Enum
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,18 +11,6 @@ DATASET_NAME = "training_data_species_grouped"
 
 # Load environment variable to overwrite default settings
 load_dotenv(PROJECT_PATH / ".env")
-
-
-class FishDetectionEnum(str, Enum):
-    """Supported type of fish detection.
-
-    FONF: Fish Or No Fish
-    IFSP = Individual Fish Species Prediction
-    """
-    FONF = "fonf"
-    IFSP = "ifsp"
-    # TODO: add support for WAW
-    # WAW = "waw"
 
 
 class DatasetSettings(BaseSettings):

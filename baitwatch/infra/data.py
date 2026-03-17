@@ -7,7 +7,6 @@ from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
 from baitwatch.settings import dataset_settings, cloud_settings, DATASET_NAME
-from baitwatch.augment import augment_images
 
 
 def dl_data(
@@ -160,12 +159,8 @@ def save_image_dataset(
         image.save(path / str(label) / f"img_{index}.jpg")
 
 
-def get_processed_dataset(
-        path: Path = dataset_settings.PROCESSED_DATA_PATH,
-        *,
-        image_size: tuple[int, int],
-        label_mode: str = 'int',
-) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
+def get_processed_dataset(path: Path = dataset_settings.PROCESSED_DATA_PATH, *,
+                          image_size: tuple[int, int]) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """Load preprocessed images into tf.data.Dataset with labels.
 
     Args:
@@ -180,7 +175,13 @@ def get_processed_dataset(
     if not list(path.iterdir()):
         raise FileNotFoundError(f"No data found at {path}")
 
-    # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
+    # Check one directory to get label mode: int for bi-class, categorical for multi class
+    # Don't forget to ignore hidden files
+    test_path = path / "train"
+    if len([f for f in test_path.iterdir() if not f.name.startswith('.')]) > 2:
+        label_mode = 'categorical'
+    else:
+        label_mode = 'int'
 
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                              labels="inferred",
@@ -253,11 +254,9 @@ def save_augmented_to_local(dataset: tf.data.Dataset, model_name: str , split: s
     Returns:
         None: Saves the augmented dataset to the path defined in dataset_settings.
     """
-    dataset_aug = dataset.flat_map(lambda x, y : augment_images(x,y))
-
     images = []
     labels = []
-    for img, lab in dataset_aug:
+    for img, lab in dataset:
         images.append(img)
         labels.append(lab)
 
