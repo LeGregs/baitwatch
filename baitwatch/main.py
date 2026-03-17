@@ -15,7 +15,7 @@ from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
 from baitwatch.domains.FishDetection import FishDetectionEnum
-from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset
+from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset, get_images, get_labels
 from baitwatch.infra.registry import save_model, load_model
 from baitwatch.models import process_data, get_preprocess, get_compiled_model
 from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
@@ -47,13 +47,17 @@ def preprocess_data(task_type: FishDetectionEnum):
 
     print("🔧 Starting dataset preprocessing...")
     task_type = FishDetectionEnum(task_type)
-    processor = process_data(task_type)
+    imgs_train, imgs_val, imgs_test = get_images(
+        directory_path=dataset_settings.RAW_DATA_PATH / DATASET_NAME,
+        image_size=dataset_settings.ORIGINAL_SIZE,
+    )
+    labels_train, labels_val, labels_test = get_labels(directory_path=dataset_settings.RAW_DATA_PATH / DATASET_NAME)
 
     print("   Preprocessing images...")
-    x_train, y_train, x_val, y_val, x_test, y_test = processor(
-        dataset_settings.RAW_DATA_PATH / DATASET_NAME,
-        dataset_settings.ORIGINAL_SIZE
-    )
+    processor = process_data(task_type)
+    x_train, y_train = processor(imgs_train, labels_train)
+    x_val, y_val = processor(imgs_val, labels_val)
+    x_test, y_test = processor(imgs_test, labels_test)
 
     print("💾 Saving preprocessed datasets...")
     save_image_dataset(x_train, dataset_settings.PROCESSED_DATA_PATH / task_type.value / "train", labels=y_train)

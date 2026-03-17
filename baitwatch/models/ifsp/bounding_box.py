@@ -90,7 +90,7 @@ def crop_bb(labels_bb_df, img_dataset):
     return cropped_img, class_bb
 
 
-def reshape_pad_crop(cropped_img, format_img=(105, 256)):
+def reshape_pad_crop(cropped_img, format_img):
     """
     Resize each crop while keeping the aspect ratio,
     then pad to reach the target format (h, w).

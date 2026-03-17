@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Callable
 
 import keras
@@ -30,7 +29,7 @@ __all__ = [
 
 def process_data(
         detection_type: FishDetectionEnum,
-) -> Callable[[Path, tuple[int, int]], tuple[Dataset, np.ndarray, Dataset, np.ndarray, Dataset, np.ndarray]]:
+) -> Callable[[Dataset, Dataset], tuple[Dataset, np.ndarray]]:
     detection_to_processed_imgs = {
         FishDetectionEnum.FONF: process_data_fonf,
         FishDetectionEnum.IFSP: process_data_ifsp,
