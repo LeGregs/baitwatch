@@ -4,7 +4,7 @@ from tensorflow.keras import layers
 from baitwatch.settings import ifsp_settings
 
 
-def build_model():
+def build_model() -> keras.models.Model:
     """
     Build a CNN model for IFSP task.
     """
@@ -70,7 +70,7 @@ def get_optimizer() -> keras.optimizers.Optimizer:
 
 
 def compile_model(model: keras.Model, optimizer: keras.optimizers.Optimizer) -> keras.Model:
-    model = model.compile(
+    model.compile(
         optimizer=optimizer,
         loss="categorical_crossentropy",
         metrics=["accuracy", "recall", "precision", "AUC"],
