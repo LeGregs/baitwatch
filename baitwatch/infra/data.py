@@ -7,6 +7,7 @@ from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
 from baitwatch.settings import dataset_settings, cloud_settings, DATASET_NAME
+from baitwatch.augment import augment_images
 
 
 def dl_data(
@@ -200,58 +201,6 @@ def get_processed_dataset(
 
     return X_train_ds, X_val_ds, X_test_ds
 
-
-def save_augmented_to_local(dataset: tf.data.Dataset, path: Path):
-    """
-    Export an augmented dataset to local storage in YOLO format (PNG + TXT).
-
-    This function iterates through a pre-shuffled augmented dataset and saves each
-    image-label pair. If the destination directory already contains data, the
-    process is aborted to prevent redundant computation and storage.
-
-    Args:
-        dataset: A tf.data.Dataset yielding tuples of (image_tensor, label_tensor).
-                 Labels must follow the [class, x_c, y_c, w, h] format.
-        path: Pathlib object pointing to the destination directory.
-              Defaults to dataset_settings.AUGMENTED_DATA_PATH.
-
-    Output:
-        - PNG images (8-bit) named 'fish_{index}.png'
-        - TXT files named 'fish_{index}.txt' containing normalized YOLO coordinates.
-    """
-    # 1. Dossier de destination
-    if not path.exists():
-        path.mkdir(parents=True)
-        print(f"📁 Nouveau dossier créé : {path}")
-
-    # 2. Sécurité : On ne veut pas générer 8000 images si elles y sont déjà
-    if any(path.iterdir()):
-        print(f"⚠️ Le dossier {path} n'est pas vide, pas besoin de save!")
-        return
-
-    print("🚀 Sauvegarde du dataset augmenté en local...")
-
-    # 3. Boucle d'export
-    for index, (img_tensor, label_tensor) in enumerate(dataset):
-        # SAUVEGARDE IMAGE
-        img_np = img_tensor.numpy().astype("uint8")
-        image = Image.fromarray(img_np)
-        img_file = path / f"fish_{index}.png"
-        image.save(img_file)
-
-        # SAUVEGARDE LABEL
-        # On extrait les valeurs [class, x, y, w, h]
-        label_data = label_tensor.numpy()
-        # On prépare la ligne format YOLO : "0 0.5 0.5 0.2 0.2"
-        label_line = " ".join([f"{x:.6f}" if i > 0 else f"{int(x)}" for i, x in enumerate(label_data)])
-
-        txt_file = path / f"fish_{index}.txt"
-        # Syntaxe Pathlib pour écrire du texte sans ouvrir de context manager complexe
-        txt_file.write_text(label_line)
-
-    print(f"✅ Terminé ! {index + 1} couples images/labels sauvegardés.")
-
-
 def dl_augmented_images(
     directory_path: Path = dataset_settings.RAW_DATA_PATH,
     ) -> tf.data.Dataset:
@@ -282,3 +231,39 @@ def dl_augmented_images(
         print("✅ Augmented data downloaded !")
     else :
         print("✅ You already have the augmented data !")
+
+
+def save_augmented_to_local(dataset: tf.data.Dataset, model_name: str , split: str):
+
+    """
+    Applies data augmentation to a dataset and saves the results to local storage.
+
+    This function processes an input dataset using a flat_map transformation to
+    generate multiple augmented variations (images and labels) for every original
+    sample. It then collects these variations into memory and exports them as
+    individual files using the project's standardized saving utility.
+
+    Args:
+        dataset (tf.data.Dataset): The input dataset containing (image, label) pairs.
+            It is recommended to unbatch the dataset before passing it to this function.
+        model_name (str): The name of the model/species task (e.g., 'ifsp', 'fonf'),
+            used to define the output directory.
+        split (str): The dataset split being processed (e.g., 'train', 'val', or 'test').
+
+    Returns:
+        None: Saves the augmented dataset to the path defined in dataset_settings.
+    """
+    dataset_aug = dataset.flat_map(lambda x, y : augment_images(x,y))
+
+    images = []
+    labels = []
+    for img, lab in dataset_aug:
+        images.append(img)
+        labels.append(lab)
+
+    images = tf.concat(images, axis=0)
+    labels = tf.concat(labels, axis=0)
+
+    save_image_dataset(tf.data.Dataset.from_tensor_slices(images),
+                       dataset_settings.PROCESSED_DATA_PATH / f'{model_name}_augmented' / split,
+                       labels=labels.numpy())

@@ -15,7 +15,7 @@ from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
 from baitwatch.domains.FishDetection import FishDetectionEnum
-from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset, get_images, get_labels
+from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset, get_images, get_labels, save_augmented_to_local
 from baitwatch.infra.registry import save_model, load_model
 from baitwatch.models import process_data, get_preprocess, get_compiled_model
 from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
@@ -161,3 +161,25 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
     # DO NOT MODIFY, model expects a batch size
     results = model.predict(image_preprocessed.batch(1))
     return results
+
+def save_augmented():
+    """
+    Orchestrates the augmentation and local storage of the IFSP dataset splits.
+
+    This function performs the following steps:
+    1. Loads the preprocessed IFSP datasets (train, validation, and test) from
+       the local processed data path using specific crop dimensions.
+    2. Sequentially triggers the augmentation and saving process for each split
+       ('train', 'val', 'test') by calling `save_augmented_to_local`.
+
+    The resulting augmented images and labels are stored in subdirectories
+    corresponding to their respective model types and splits.
+    """
+    X_train, X_val, X_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
+                                                  image_size= ifsp_settings.CROP_IMG_SIZE)
+
+    save_augmented_to_local(X_train, 'ifsp', 'train')
+
+    save_augmented_to_local(X_val, 'ifsp', 'val')
+
+    save_augmented_to_local(X_test, 'ifsp', 'test')

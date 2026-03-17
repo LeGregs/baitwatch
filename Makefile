@@ -21,6 +21,9 @@ run_preprocess_fonf:
 run_preprocess_ifsp:
 	python -c 'from baitwatch.main import preprocess_data; preprocess_data("ifsp")'
 
+run_augment_ifsp:
+	python -c 'from baitwatch.main import save_augmented; save_augmented()'
+
 run_train_fonf:
 	python -c 'from baitwatch.main import train; train("fonf")'
 
