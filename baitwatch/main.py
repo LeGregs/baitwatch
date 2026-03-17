@@ -134,8 +134,9 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
         Dict: Fish detection results
     """
     # Perform preprocessing
-    image_ds = Dataset.from_tensor_slices([np.array(image)])
+    image_ds = Dataset.from_tensors(np.array(image))
     image_preprocessed = get_preprocess(detection_type)(image_ds)
     # Perform detection
-    results = model.predict(image_preprocessed)
+    # DO NOT MODIFY, model expects a batch size
+    results = model.predict(image_preprocessed.batch(1))
     return results
