@@ -63,13 +63,14 @@ def preprocess_data(task_type: FishDetectionEnum):
     print("✅ Preprocessing completed and saved")
 
 
-def train(model_type: FishDetectionEnum):
+def train(model_type: FishDetectionEnum, augmented: bool = False) -> None:
     """Construit, compile et entraîne le modèle, puis sauvegarde + affiche les courbes."""
     print(f"🏋️ Train model({model_type})...")
     # Cast str as Enum object (from Make)
     model_type = FishDetectionEnum(model_type)
 
-    x_train_ds, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
+    model_dir_path = f"{model_type.value}_augmented" if augmented else f"{model_type.value}"
+    x_train_ds, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_dir_path,
                                                     image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
     print(f"🛠️️ Building model {model_type}...")
