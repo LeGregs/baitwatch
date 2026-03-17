@@ -165,7 +165,7 @@ def save_augmented():
     The resulting augmented images and labels are stored in subdirectories
     corresponding to their respective model types and splits.
     """
-    x_train, x_val, x_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
+    x_train, x_val, x_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / FishDetectionEnum.IFSP.value,
                                                    image_size=ifsp_settings.CROP_IMG_SIZE)
 
     # Augment images
@@ -174,8 +174,8 @@ def save_augmented():
     x_test = augment_ds(x_test)
 
     # Save
-    save_augmented_to_local(x_train, 'ifsp', 'train')
+    save_augmented_to_local(x_train, FishDetectionEnum.IFSP.value, 'train')
 
-    save_augmented_to_local(x_val, 'ifsp', 'val')
+    save_augmented_to_local(x_val, FishDetectionEnum.IFSP.value, 'val')
 
-    save_augmented_to_local(x_test, 'ifsp', 'test')
+    save_augmented_to_local(x_test, FishDetectionEnum.IFSP.value, 'test')
