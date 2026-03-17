@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.data import Dataset
 
 from baitwatch.data import get_images, get_labels
@@ -42,6 +43,12 @@ def process_data_ifsp(
 
 def preprocess_ifsp(dataset: Dataset) -> Dataset:
     dataset = preprocess_ds(dataset)
-    # Don't forget to reverse img size between OpenCV and Tensorflow
-    dataset = resize_ds(dataset, img_size=ifsp_settings.CROP_IMG_SIZE[::-1])
+
+    @tf.py_function(Tout=tf.uint8)  # 8bit image
+    def resize(processed_img):
+        processed_img = processed_img.numpy().astype("uint8")
+        resized_img = reshape_pad_crop([processed_img], ifsp_settings.CROP_IMG_SIZE)
+        return resized_img
+    dataset = dataset.map(resize, num_parallel_calls=tf.data.AUTOTUNE)
+
     return dataset
