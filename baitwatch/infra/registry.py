@@ -4,7 +4,8 @@ from time import strftime
 from google.cloud import storage
 from tensorflow import keras
 
-from baitwatch.settings import FishDetectionEnum, model_settings, cloud_settings
+from baitwatch.settings import model_settings, cloud_settings
+from baitwatch.domains.FishDetection import FishDetectionEnum
 
 
 def save_model(

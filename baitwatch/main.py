@@ -14,11 +14,12 @@ from PIL import ImageFile
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
+from baitwatch.domains.FishDetection import FishDetectionEnum
 from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset
 from baitwatch.infra.registry import save_model, load_model
 from baitwatch.models import process_data, get_preprocess, get_compiled_model
 from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
-from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, fonf_settings, DATASET_NAME, \
+from baitwatch.settings import dataset_settings, model_settings, fonf_settings, DATASET_NAME, \
     ifsp_settings
 
 # Define how to load labels, depending on bi-class or multi-class

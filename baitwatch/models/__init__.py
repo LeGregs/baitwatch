@@ -17,7 +17,7 @@ from baitwatch.models.ifsp.model import (
     compile_model as ifsp_compile_model
 )
 from baitwatch.models.ifsp.preprocessing import process_data_ifsp, preprocess_ifsp
-from baitwatch.settings import FishDetectionEnum
+from baitwatch.domains.FishDetection import FishDetectionEnum
 
 __all__ = [
     "process_data",
