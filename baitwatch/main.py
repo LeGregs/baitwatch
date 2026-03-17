@@ -120,7 +120,7 @@ def run_cycle(task_type: FishDetectionEnum) -> None:
     classification_report(task_type)
 
 
-def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageFile.ImageFile) -> dict:
+def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageFile.ImageFile) -> list[list[float]]:
     """Request a fish detection on given image, based on given model.
 
     Perform preprocessing on image then predict on processed image.
@@ -131,7 +131,7 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
         image (ImageFile.ImageFile): Image file object
 
     Returns:
-        Dict: Fish detection results
+        List with probabilities of fish detection
     """
     # Perform preprocessing
     image_ds = Dataset.from_tensors(np.array(image))

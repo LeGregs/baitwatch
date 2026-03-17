@@ -1,12 +1,14 @@
 """Web API."""
 import io
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, UploadFile
-from PIL import Image
 
-from baitwatch.settings import FishDetectionEnum
+from PIL import Image
+from fastapi import FastAPI, UploadFile
+
+from baitwatch.domains.prediction_result import PredictionResult
 from baitwatch.main import detect_fishes
 from baitwatch.registry import load_model
+from baitwatch.settings import FishDetectionEnum
 
 
 @asynccontextmanager
@@ -57,7 +59,8 @@ async def detect(detection_type: FishDetectionEnum, image_file: UploadFile):
     if model is None:
         return {"error": f"No model found for detection type {detection_type.value}"}
 
-    return detect_fishes(model, detection_type, image)
+    results = detect_fishes(model, detection_type, image)
+    return PredictionResult.from_predict_result(results).model_dump(mode="json")
 
 
 @app.get("/ping/")
