@@ -9,7 +9,6 @@ run_cycle : exécute le cycle complet (download → preprocess → train → rep
 detect_fishes : détection de poissons sur une image
 """
 
-<<<<<<< Updated upstream
 import numpy as np
 from PIL import ImageFile
 from tensorflow.data import Dataset
@@ -20,6 +19,7 @@ from baitwatch.model import build_model, train_model, get_classification_report,
 from baitwatch.models import process_data, get_preprocess
 from baitwatch.plot_history import plot_history
 from baitwatch.registry import save_model, load_model
+from baitwatch.data import save_augmented_to_local
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, fonf_settings, DATASET_NAME, \
     ifsp_settings
 
@@ -40,14 +40,6 @@ DETECTION_TYPE_TO_OUTPUT_LAYER = {
     FishDetectionEnum.FONF: (1, "sigmoid"),
     FishDetectionEnum.IFSP: (8, 'softmax'),
 }
-=======
-from baitwatch.data import dl_data, get_images, get_labels, save_image_dataset, get_target_fonf, get_processed_dataset
-from baitwatch.preprocessing import preprocess, resize
-from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
-from baitwatch.plot_history import plot_history
-from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
-from baitwatch.bbox import get_dataset_IFSP, build_bbox_dataframe, crop_bb, reshape_pad_crop
->>>>>>> Stashed changes
 
 
 def download_data():
@@ -187,3 +179,13 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
     # DO NOT MODIFY, model expects a batch size
     results = model.predict(image_preprocessed.batch(1))
     return results
+
+def save_augmented():
+    X_train, X_val, X_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
+                                                  image_size= ifsp_settings.CROP_IMG_SIZE)
+
+    save_augmented_to_local(X_train, 'ifsp', 'train')
+
+    save_augmented_to_local(X_val, 'ifsp', 'val')
+
+    save_augmented_to_local(X_test, 'ifsp', 'test')

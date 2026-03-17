@@ -7,6 +7,7 @@ from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
 from baitwatch.settings import dataset_settings, cloud_settings, DATASET_NAME
+from baitwatch.augment import augment_images
 
 
 def dl_data(
@@ -200,68 +201,19 @@ def get_processed_dataset(
 
     return X_train_ds, X_val_ds, X_test_ds
 
-<<<<<<< Updated upstream
 
-def save_augmented_to_local(dataset: tf.data.Dataset, path: Path):
-    """
-    Export an augmented dataset to local storage in YOLO format (PNG + TXT).
+def save_augmented_to_local(dataset: tf.data.Dataset, model_name : str , split : str):
+    dataset_aug = dataset.flat_map(lambda x, y : augment_images(x,y))
 
-    This function iterates through a pre-shuffled augmented dataset and saves each
-    image-label pair. If the destination directory already contains data, the
-    process is aborted to prevent redundant computation and storage.
+    images = []
+    labels = []
+    for img, lab in dataset_aug:
+        images.append(img)
+        labels.append(lab)
 
-    Args:
-        dataset: A tf.data.Dataset yielding tuples of (image_tensor, label_tensor).
-                 Labels must follow the [class, x_c, y_c, w, h] format.
-        path: Pathlib object pointing to the destination directory.
-              Defaults to dataset_settings.AUGMENTED_DATA_PATH.
+    images = tf.concat(images, axis=0)
+    labels = tf.concat(labels, axis=0)
 
-    Output:
-        - PNG images (8-bit) named 'fish_{index}.png'
-        - TXT files named 'fish_{index}.txt' containing normalized YOLO coordinates.
-    """
-<<<<<<< HEAD
-    # 1. Définir les sous-dossiers
-    img_path = path / "augmented_images"
-    lab_path = path / "augmented_labels"
-=======
-    # 1. Dossier de destination
-    if not path.exists():
-        path.mkdir(parents=True)
-        print(f"📁 Nouveau dossier créé : {path}")
->>>>>>> 129d05414d35b002f5bd78a9a749aeaef303e25b
-
-    # 2. Création des dossiers
-    for p in [img_path, lab_path]:
-        if not p.exists():
-            p.mkdir(parents=True)
-            print(f"📁 Dossier créé : {p}")
-
-    # 3. Sécurité : On vérifie si les dossiers sont vides
-    if any(img_path.iterdir()) or any(lab_path.iterdir()):
-        print(f"⚠️ Les dossiers dans {path} ne sont pas vides, arrêt de la sauvegarde.")
-        return
-
-    print("🚀 Sauvegarde du dataset augmenté (Images + Labels)...")
-
-    for index, (img_tensor, label_tensor) in enumerate(dataset):
-<<<<<<< HEAD
-        # SAUVEGARDE IMAGE -> dans augmented_images
-=======
-        # SAUVEGARDE IMAGE
->>>>>>> 129d05414d35b002f5bd78a9a749aeaef303e25b
-        img_np = img_tensor.numpy().astype("uint8")
-        image = Image.fromarray(img_np)
-        image.save(img_path / f"fish_{index}.png")
-
-        # SAUVEGARDE LABEL -> dans augmented_labels
-        label_data = label_tensor.numpy()
-        # Si le label est vide, write_text créera un fichier vide (OK pour YOLO)
-        label_line = " ".join([f"{x:.6f}" if i > 0 else f"{int(x)}" for i, x in enumerate(label_data)])
-
-        txt_file = lab_path / f"fish_{index}.txt"
-        txt_file.write_text(label_line)
-
-    print(f"✅ Terminé ! {index + 1} couples sauvegardés dans {path}")
-=======
->>>>>>> Stashed changes
+    save_image_dataset(tf.data.Dataset.from_tensor_slices(images),
+                       dataset_settings.PROCESSED_DATA_PATH / f'{model_name}_augmented' / split,
+                       labels=labels.numpy())
