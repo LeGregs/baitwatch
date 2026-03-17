@@ -181,6 +181,18 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
     return results
 
 def save_augmented():
+    """
+    Orchestrates the augmentation and local storage of the IFSP dataset splits.
+
+    This function performs the following steps:
+    1. Loads the preprocessed IFSP datasets (train, validation, and test) from
+       the local processed data path using specific crop dimensions.
+    2. Sequentially triggers the augmentation and saving process for each split
+       ('train', 'val', 'test') by calling `save_augmented_to_local`.
+
+    The resulting augmented images and labels are stored in subdirectories
+    corresponding to their respective model types and splits.
+    """
     X_train, X_val, X_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
                                                   image_size= ifsp_settings.CROP_IMG_SIZE)
 
