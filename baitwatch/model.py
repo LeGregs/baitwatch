@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 from tensorflow.data import Dataset
 from tensorflow import keras
@@ -7,17 +5,17 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report
 
-from baitwatch.settings import preprocessing_settings, model_settings
+from baitwatch.settings import fonf_settings
 
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
-IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
+IMG_SIZE = fonf_settings.PREPROCESS_IMG_SIZE[::-1]
 
-def build_model(INPUT_FORMAT = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
+def build_model(input_format = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
     """
     Build a CNN model for fonf task.
     """
     # Imput layer
-    inputs  = keras.Input(shape=INPUT_FORMAT)
+    inputs  = keras.Input(shape=input_format)
 
     # Normalize images
     x = keras.layers.Rescaling(scale=1./255)(inputs)
@@ -75,30 +73,6 @@ def fonf_optimizer() -> keras.optimizers.Optimizer:
     return optimizer
 
 
-def compile_model(model,
-                  optimizer='rmsprop',
-                  loss = 'binary_crossentropy',
-                  metrics=['accuracy', 'recall']):
-    """
-    Compile le modèle
-
-    Args :
-        model: le modèle à compiler
-        optimizer: choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
-        metrics: les métriques à suivre pendant l'entraînement
-
-    Returns :
-        model: le modèle compilé
-    """
-
-    model.compile(
-        optimizer=optimizer,            # ajuste les poids
-        loss=loss,  # mesure l'erreur
-        metrics=metrics         # % de bonnes prédictions
-    )
-    return model
-
-
 def train_model(model,
                 *train_data: np.ndarray | Dataset,
                 validation_data: tuple[np.ndarray] | Dataset,
@@ -142,50 +116,6 @@ def train_model(model,
         callbacks=[early_stopping]       # arrête automatiquement si plateau
     )
     return history, model
-
-
-def save_model(
-    model: keras.Model,
-    path: Path = model_settings.MODEL_PATH
-) -> None:
-    """Save the given model in given path."""
-    print(f"⏳ Saving model at {path}...")
-    if not path.exists():
-        path.mkdir(parents=True)
-    model_num = len(list(path.iterdir())) + 1
-    model_name = f"model_{model_num}.keras"
-    model.save(path / model_name)
-    print(f"✅ Model {model_name} saved at {path}")
-
-
-def load_model(
-    path: Path = model_settings.MODEL_PATH,
-    model_name: str = ""
-) -> keras.Model:
-    """Load the model.
-
-    If no model name is passed, return the last model in the path.
-    """
-    print(f"⏳ Loading model...")
-    if not path.exists():
-        raise FileNotFoundError(f"Path or directory does not exists: {path}")
-
-    models = [file_path for file_path in path.iterdir() if file_path.name.endswith(".keras")]
-    if not models :
-        raise FileNotFoundError(f"No keras model found at {path}")
-
-    # Get the last model (creation date) when no name passed
-    if not model_name:
-        models.sort(key=lambda model_path: model_path.stat().st_ctime)
-        model_name = models[-1].name
-
-    if path / model_name not in models:
-        raise FileNotFoundError(f"Model {model_name} not found at {path}")
-
-    model = keras.models.load_model(path / model_name)
-    print(f"✅ Model {model_name} loaded")
-
-    return model
 
 
 def get_classification_report(
@@ -233,9 +163,3 @@ def get_classification_report(
 
     return classification_report(y_val, y_pred)
 
-
-if __name__ == '__main__':
-    model = build_model()
-    model = compile_model(model)
-    history, model = train_model(model, X_train, y_train, X_val, y_val)
-    model.summary()
