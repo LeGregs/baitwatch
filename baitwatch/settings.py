@@ -32,12 +32,16 @@ class DatasetSettings(BaseSettings):
     PROCESSED_DATA_PATH: DirectoryPath = PROJECT_PATH / "processed_data"
     # AUGMENTED_DATA_PATH = PROJECT_PATH / "augmented_data"
     ORIGINAL_SIZE: tuple[int, int] = (1080, 1920)  # Tensorflow: height width
-    CROP_IMG_SIZE: tuple[int, int] = (105, 256)  # Tensorflow: height width
 
 
 class FonfSettings(BaseSettings):
     """Settings for preprocessing."""
     PREPROCESS_IMG_SIZE: tuple[int, int] = (256, 144)  # OpenCV: width height
+
+
+class IfspSettings(BaseSettings):
+    """Settings for preprocessing."""
+    CROP_IMG_SIZE: tuple[int, int] = (105, 256)  # Tensorflow: height width
 
 
 class ModelSettings(BaseSettings):
@@ -53,5 +57,6 @@ class CloudSettings(BaseSettings):
 
 dataset_settings = DatasetSettings()
 fonf_settings = FonfSettings()
+ifsp_settings = IfspSettings()
 model_settings = ModelSettings()
 cloud_settings = CloudSettings()

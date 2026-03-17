@@ -6,7 +6,7 @@ from tensorflow.data import Dataset
 from baitwatch.data import get_images, get_labels
 from baitwatch.models.commons.preprocessing import preprocess_ds, resize_ds
 from baitwatch.models.ifsp.bounding_box import build_bbox_dataframe, crop_bb, reshape_pad_crop
-from baitwatch.settings import dataset_settings
+from baitwatch.settings import ifsp_settings
 
 
 def process_data_ifsp(
@@ -43,5 +43,5 @@ def process_data_ifsp(
 def preprocess_ifsp(dataset: Dataset) -> Dataset:
     dataset = preprocess_ds(dataset)
     # Don't forget to reverse img size between OpenCV and Tensorflow
-    dataset = resize_ds(dataset, img_size=dataset_settings.CROP_IMG_SIZE[::-1])
+    dataset = resize_ds(dataset, img_size=ifsp_settings.CROP_IMG_SIZE[::-1])
     return dataset
