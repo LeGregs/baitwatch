@@ -6,7 +6,7 @@ from PIL import Image
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
-from baitwatch.settings import dataset_settings, preprocessing_settings, BUCKET_NAME, DATASET_NAME
+from baitwatch.settings import dataset_settings, preprocessing_settings, cloud_settings, DATASET_NAME
 
 
 def dl_data(
@@ -33,7 +33,7 @@ def dl_data(
         local_filename = directory_path
 
         client = storage.Client()
-        bucket = client.bucket(BUCKET_NAME)
+        bucket = client.bucket(cloud_settings.BUCKET_NAME)
         #blob = bucket.blob(storage_filename)
         blobs = [blob.name for blob in client.list_blobs("baitwatch-bucket", prefix="training_data_species_grouped")]
         transfer_manager.download_many_to_path(bucket,

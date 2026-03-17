@@ -14,7 +14,8 @@ from tensorflow.data import AUTOTUNE
 
 from baitwatch.data import dl_data, get_images, save_image_dataset, get_target_fonf, get_processed_dataset
 from baitwatch.preprocessing import preprocess, resize
-from baitwatch.model import build_model, compile_model, train_model, save_model, load_model, get_classification_report, fonf_optimizer
+from baitwatch.model import build_model, compile_model, train_model, get_classification_report, fonf_optimizer
+from baitwatch.registry import save_model, load_model
 from baitwatch.plot_history import plot_history
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum
 from baitwatch.bbox import get_dataset_IFSP
@@ -90,8 +91,7 @@ def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
     history, model = train_model(model, X_train_ds, validation_data=X_val_ds)
 
     print("💾 Saving model...")
-    save_model(model, model_settings.MODEL_PATH / model_type)
-
+    save_model(model, model_type, model_settings.MODEL_LOCAL_PATH)
     print("✅ Training finished")
     plot_history(history)
 
@@ -101,8 +101,7 @@ def evaluate(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
 
     print(f"🧪 Model evaluating ({model_type})...")
 
-    model  = load_model(model_settings.MODEL_PATH / model_type)
-
+    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
     _, _, X_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
 
     results = model.evaluate(X_test_ds, return_dict=True)
@@ -116,7 +115,7 @@ def classification_report(model_type: FishDetectionEnum = FishDetectionEnum.FONF
 
     print(f"📋 Generating classification report ({model_type})...")
 
-    model  = load_model(model_settings.MODEL_PATH / model_type, model_name=model_name)
+    model  = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
 
     if model_type != 'fonf':
         label_mode = 'categorical'
