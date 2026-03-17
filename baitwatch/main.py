@@ -14,11 +14,11 @@ from PIL import ImageFile
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
-from baitwatch.data import dl_data, save_image_dataset, get_processed_dataset
+from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset
+from baitwatch.infra.registry import save_model, load_model
 from baitwatch.model import build_model, train_model, get_classification_report, fonf_optimizer
 from baitwatch.models import process_data, get_preprocess
 from baitwatch.plot_history import plot_history
-from baitwatch.registry import save_model, load_model
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, fonf_settings, DATASET_NAME, \
     ifsp_settings
 

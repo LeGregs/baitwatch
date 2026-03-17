@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from tensorflow.data import Dataset
 
-from baitwatch.data import get_labels, get_images
+from baitwatch.infra.data import get_labels, get_images
 from baitwatch.models.commons.preprocessing import preprocess_ds, resize_ds
 from baitwatch.settings import dataset_settings, DATASET_NAME, fonf_settings
 

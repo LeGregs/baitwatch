@@ -4,8 +4,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.data import Dataset
 
-from baitwatch.data import get_images, get_labels
-from baitwatch.models.commons.preprocessing import preprocess_ds, resize_ds
+from baitwatch.infra.data import get_images, get_labels
+from baitwatch.models.commons.preprocessing import preprocess_ds
 from baitwatch.models.ifsp.bounding_box import build_bbox_dataframe, crop_bb, reshape_pad_crop
 from baitwatch.settings import ifsp_settings
 
