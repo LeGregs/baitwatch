@@ -8,7 +8,7 @@ from baitwatch.model import build_model, train_model, get_classification_report,
 from baitwatch.models import process_data, get_preprocess
 from baitwatch.plot_history import plot_history
 from baitwatch.registry import save_model, load_model
-from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, preprocessing_settings, DATASET_NAME
+from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, fonf_settings, DATASET_NAME
 
 # Define how to load labels, depending on bi-class or multi-class
 DETECTION_TYPE_TO_LABEL = {
@@ -18,7 +18,7 @@ DETECTION_TYPE_TO_LABEL = {
 
 # Define image sizes
 DETECTION_TYPE_TO_IMG_SIZE = {
-    FishDetectionEnum.FONF: preprocessing_settings.PREPROCESS_IMG_SIZE[::-1],
+    FishDetectionEnum.FONF: fonf_settings.PREPROCESS_IMG_SIZE[::-1],
     FishDetectionEnum.IFSP: dataset_settings.CROP_IMG_SIZE,
 }
 

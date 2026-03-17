@@ -35,7 +35,7 @@ class DatasetSettings(BaseSettings):
     CROP_IMG_SIZE: tuple[int, int] = (105, 256)  # Tensorflow: height width
 
 
-class PreprocessingSettings(BaseSettings):
+class FonfSettings(BaseSettings):
     """Settings for preprocessing."""
     PREPROCESS_IMG_SIZE: tuple[int, int] = (256, 144)  # OpenCV: width height
 
@@ -52,6 +52,6 @@ class CloudSettings(BaseSettings):
 
 
 dataset_settings = DatasetSettings()
-preprocessing_settings = PreprocessingSettings()
+fonf_settings = FonfSettings()
 model_settings = ModelSettings()
 cloud_settings = CloudSettings()

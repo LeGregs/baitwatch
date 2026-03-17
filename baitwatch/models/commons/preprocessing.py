@@ -4,8 +4,6 @@ import cv2 as cv
 import numpy as np
 import tensorflow as tf
 
-from baitwatch.settings import preprocessing_settings
-
 
 def white_balance(img: np.ndarray) -> np.ndarray:
     """Apply an automatic white balance on image.
@@ -142,7 +140,7 @@ def preprocess_ds(dataset: tf.data.Dataset) -> tf.data.Dataset:
 
 def resize_ds(
         dataset: tf.data.Dataset,
-        img_size: tuple[int, int] = preprocessing_settings.PREPROCESS_IMG_SIZE,
+        img_size: tuple[int, int],
 ) -> tf.data.Dataset:
     @tf.py_function(Tout=tf.uint8)  # 8bit image
     def resize(processed_img):

@@ -5,7 +5,7 @@ from tensorflow.data import Dataset
 
 from baitwatch.data import get_labels, get_images
 from baitwatch.models.commons.preprocessing import preprocess_ds, resize_ds
-from baitwatch.settings import dataset_settings, DATASET_NAME, preprocessing_settings
+from baitwatch.settings import dataset_settings, DATASET_NAME, fonf_settings
 
 
 def process_data_fonf(
@@ -25,7 +25,7 @@ def process_data_fonf(
 
 def preprocess_fonf(dataset: Dataset) -> Dataset:
     dataset = preprocess_ds(dataset)
-    dataset = resize_ds(dataset, img_size=preprocessing_settings.PREPROCESS_IMG_SIZE)
+    dataset = resize_ds(dataset, img_size=fonf_settings.PREPROCESS_IMG_SIZE)
     return dataset
 
 

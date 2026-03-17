@@ -5,10 +5,10 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report
 
-from baitwatch.settings import preprocessing_settings
+from baitwatch.settings import fonf_settings
 
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
-IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
+IMG_SIZE = fonf_settings.PREPROCESS_IMG_SIZE[::-1]
 
 def build_model(input_format = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
     """
