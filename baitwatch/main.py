@@ -18,6 +18,7 @@ from baitwatch.domains.FishDetection import FishDetectionEnum
 from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset, get_images, get_labels, save_augmented_to_local
 from baitwatch.infra.registry import save_model, load_model
 from baitwatch.models import process_data, get_preprocess, get_compiled_model
+from baitwatch.models.commons.augment import augment_ds
 from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
 from baitwatch.settings import dataset_settings, model_settings, fonf_settings, DATASET_NAME, \
     ifsp_settings
@@ -162,6 +163,7 @@ def detect_fishes(model: Model, detection_type: FishDetectionEnum, image: ImageF
     results = model.predict(image_preprocessed.batch(1))
     return results
 
+
 def save_augmented():
     """
     Orchestrates the augmentation and local storage of the IFSP dataset splits.
@@ -175,11 +177,17 @@ def save_augmented():
     The resulting augmented images and labels are stored in subdirectories
     corresponding to their respective model types and splits.
     """
-    X_train, X_val, X_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
+    x_train, x_val, x_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
                                                   image_size= ifsp_settings.CROP_IMG_SIZE)
 
-    save_augmented_to_local(X_train, 'ifsp', 'train')
+    # Augment images
+    x_train = augment_ds(x_train)
+    x_val = augment_ds(x_val)
+    x_test = augment_ds(x_test)
 
-    save_augmented_to_local(X_val, 'ifsp', 'val')
+    # Save
+    save_augmented_to_local(x_train, 'ifsp', 'train')
 
-    save_augmented_to_local(X_test, 'ifsp', 'test')
+    save_augmented_to_local(x_val, 'ifsp', 'val')
+
+    save_augmented_to_local(x_test, 'ifsp', 'test')

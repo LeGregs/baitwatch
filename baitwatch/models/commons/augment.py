@@ -87,3 +87,9 @@ def augment_images(img, label):
     aug_labs = [label] * 8
 
     return tf.data.Dataset.from_tensor_slices((aug_imgs, aug_labs))
+
+
+def augment_ds(dataset: tf.data.Dataset) -> tf.data.Dataset:
+    """Augments the dataset by applying geometric transformations."""
+    dataset_aug = dataset.flat_map(lambda x, y: augment_images(x, y))
+    return dataset_aug

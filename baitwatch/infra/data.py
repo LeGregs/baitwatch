@@ -7,7 +7,6 @@ from google.cloud import storage
 from google.cloud.storage import transfer_manager
 
 from baitwatch.settings import dataset_settings, cloud_settings, DATASET_NAME
-from baitwatch.augment import augment_images
 
 
 def dl_data(
@@ -253,11 +252,9 @@ def save_augmented_to_local(dataset: tf.data.Dataset, model_name: str , split: s
     Returns:
         None: Saves the augmented dataset to the path defined in dataset_settings.
     """
-    dataset_aug = dataset.flat_map(lambda x, y : augment_images(x,y))
-
     images = []
     labels = []
-    for img, lab in dataset_aug:
+    for img, lab in dataset:
         images.append(img)
         labels.append(lab)
 
