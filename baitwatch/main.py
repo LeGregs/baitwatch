@@ -23,12 +23,6 @@ from baitwatch.models.commons.model import train_model, get_classification_repor
 from baitwatch.settings import dataset_settings, model_settings, fonf_settings, DATASET_NAME, \
     ifsp_settings
 
-# Define how to load labels, depending on bi-class or multi-class
-DETECTION_TYPE_TO_LABEL = {
-    FishDetectionEnum.FONF: "int",
-    FishDetectionEnum.IFSP: "categorical",
-}
-
 # Define image sizes
 DETECTION_TYPE_TO_IMG_SIZE = {
     FishDetectionEnum.FONF: fonf_settings.PREPROCESS_IMG_SIZE[::-1],
@@ -74,11 +68,8 @@ def train(model_type: FishDetectionEnum):
     # Cast str as Enum object (from Make)
     model_type = FishDetectionEnum(model_type)
 
-    x_train_ds, x_val_ds, _ = get_processed_dataset(
-        dataset_settings.PROCESSED_DATA_PATH / model_type.value,
-        image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
-        label_mode=DETECTION_TYPE_TO_LABEL[model_type]
-    )
+    x_train_ds, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
+                                                    image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
     print(f"🛠️️ Building model {model_type}...")
     model = get_compiled_model(model_type)
@@ -101,11 +92,8 @@ def evaluate(model_type: FishDetectionEnum):
     model_type = FishDetectionEnum(model_type)
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH)
 
-    _, _, x_test_ds = get_processed_dataset(
-        dataset_settings.PROCESSED_DATA_PATH / model_type.value,
-        image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
-        label_mode=DETECTION_TYPE_TO_LABEL[model_type],
-    )
+    _, _, x_test_ds = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
+                                            image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
     results = model.evaluate(x_test_ds, return_dict=True)
     print(results)
@@ -120,8 +108,7 @@ def classification_report(model_type: FishDetectionEnum, model_name: str = "") -
     model = load_model(model_type, model_settings.MODEL_LOCAL_PATH, model_name=model_name)
 
     _, x_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type.value,
-                                           image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
-                                           label_mode=DETECTION_TYPE_TO_LABEL[model_type])
+                                           image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type])
 
     print(get_classification_report(model, x_val_ds))
 
@@ -178,7 +165,7 @@ def save_augmented():
     corresponding to their respective model types and splits.
     """
     x_train, x_val, x_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / 'ifsp',
-                                                  image_size= ifsp_settings.CROP_IMG_SIZE)
+                                                   image_size=ifsp_settings.CROP_IMG_SIZE)
 
     # Augment images
     x_train = augment_ds(x_train)

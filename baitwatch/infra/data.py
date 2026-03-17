@@ -159,12 +159,8 @@ def save_image_dataset(
         image.save(path / str(label) / f"img_{index}.jpg")
 
 
-def get_processed_dataset(
-        path: Path = dataset_settings.PROCESSED_DATA_PATH,
-        *,
-        image_size: tuple[int, int],
-        label_mode: str = 'int',
-) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
+def get_processed_dataset(path: Path = dataset_settings.PROCESSED_DATA_PATH, *,
+                          image_size: tuple[int, int]) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """Load preprocessed images into tf.data.Dataset with labels.
 
     Args:
@@ -178,6 +174,14 @@ def get_processed_dataset(
 
     if not list(path.iterdir()):
         raise FileNotFoundError(f"No data found at {path}")
+
+    # Check one directory to get label mode: int for bi-class, categorical for multi class
+    # Don't forget to ignore hidden files
+    test_path = path / "train"
+    if len([f for f in test_path.iterdir() if not f.name.startswith('.')]) > 2:
+        label_mode = 'categorical'
+    else:
+        label_mode = 'int'
 
     # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 
