@@ -44,3 +44,6 @@ run_report_fonf:
 
 run_report_ifsp:
 	python -c 'from baitwatch.main import classification_report; classification_report("ifsp")'
+
+run_api:
+	uvicorn baitwatch.interfaces.api:app --reload
