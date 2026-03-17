@@ -22,4 +22,4 @@ RUN mkdir model; mkdir raw_data; mkdir processed_data
 # Copy project last (regularly updated)
 COPY baitwatch baitwatch
 
-CMD uvicorn baitwatch.api:app --host 0.0.0.0 --port $PORT
+CMD uvicorn baitwatch.interfaces.api:app --host 0.0.0.0 --port $PORT
