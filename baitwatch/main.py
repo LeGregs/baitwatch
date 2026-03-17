@@ -75,14 +75,12 @@ def train(model_type: FishDetectionEnum):
     # Cast str as Enum object (from Make)
     model_type = FishDetectionEnum(model_type)
 
-    X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
-    model = build_model()
-
     x_train_ds, x_val_ds, _ = get_processed_dataset(
         dataset_settings.PROCESSED_DATA_PATH / model_type.value,
         image_size=DETECTION_TYPE_TO_IMG_SIZE[model_type],
         label_mode=DETECTION_TYPE_TO_LABEL[model_type]
     )
+
     optimizer = fonf_optimizer()
     model = build_model(
         input_format=(*DETECTION_TYPE_TO_IMG_SIZE[model_type], 3),
