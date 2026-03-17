@@ -59,15 +59,11 @@ def preprocess_dataset():
 
 
 def train(model_type: FishDetectionEnum = FishDetectionEnum.FONF):
-<<<<<<< HEAD
     """Construit, compile et entraîne le modèle, puis sauvegarde + affiche les courbes."""
-
     print(f"🏋️ Entraînement du modèle ({model_type})...")
 
     X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
     model = build_model()
-=======
->>>>>>> 24ab38d4e9ee8a95bfd0c220db110f78dce9a477
 
     if model_type == FishDetectionEnum.FONF:
         X_train_ds, X_val_ds, _ = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / model_type)
