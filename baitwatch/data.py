@@ -201,6 +201,37 @@ def get_processed_dataset(
 
     return X_train_ds, X_val_ds, X_test_ds
 
+def dl_augmented_images(
+    directory_path: Path = dataset_settings.RAW_DATA_PATH,
+    ) -> tf.data.Dataset:
+    """
+    Charge les images augmentées depuis le local.
+    Si elles ne sont pas disponibles, les télécharge depuis le bucket d'abord.
+
+    Args :
+        directory_path : chemin local vers raw_data/
+
+    Returns :
+        None, only prints (dl data in local)
+    """
+    augmented_path = directory_path / 'augmented_images'
+
+    # ── Télécharge si pas en local ────────────────────────
+    if not augmented_path.is_dir() or not [f for f in augmented_path.iterdir() if not f.name.startswith('.')]:
+        print("✋ Augmented data not found, downloading from bucket...")
+        client = storage.Client()
+        bucket = client.bucket(cloud_settings.BUCKET_NAME)
+        blobs  = [blob.name for blob in client.list_blobs(cloud_settings.BUCKET_NAME, prefix="augmented_images")]
+        transfer_manager.download_many_to_path(
+            bucket,
+            blobs,
+            destination_directory=directory_path,
+            skip_if_exists=True,
+        )
+        print("✅ Augmented data downloaded !")
+    else :
+        print("✅ You already have the augmented data !")
+        
 
 def save_augmented_to_local(dataset: tf.data.Dataset, model_name : str , split : str):
     dataset_aug = dataset.flat_map(lambda x, y : augment_images(x,y))
