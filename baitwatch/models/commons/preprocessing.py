@@ -7,15 +7,13 @@ preprocess : pipeline complète de preprocessing (white balance → contraste �
 augment_preprocess : multiplie le dataset x8 avec augmentations
 """
 
-import numpy as np
 import cv2 as cv
+import numpy as np
 import tensorflow as tf
 
-from baitwatch.settings import preprocessing_settings
 
-
-def white_balance(img: np.array) -> np.array:
-     """Apply an automatic white balance on image.
+def white_balance(img: np.ndarray) -> np.ndarray:
+    """Apply an automatic white balance on image.
 
     Input image is expected to come from tensorflow, which is in RGB.
 
@@ -37,17 +35,17 @@ def white_balance(img: np.array) -> np.array:
     return result
 
 
-def contrast_enhance(img: np.array) -> np.array:
+def contrast_enhance(img: np.ndarray) -> np.ndarray:
     """Apply an automatic contrast enhancement on image.
 
     Input image is expected to come from tensorflow, which is in RGB.
+
     Args:
         img: RGB image in 8 bits numpy format
 
     Returns:
         White balanced image in numpy format
     """
-
     # Use YCrCb color space to keep luminance
     ycrcb = cv.cvtColor(img, cv.COLOR_RGB2YCrCb)
     y, cr, cb = cv.split(ycrcb)
@@ -63,10 +61,10 @@ def contrast_enhance(img: np.array) -> np.array:
     enhanced_image = cv.cvtColor(enhanced_ycrcb, cv.COLOR_YCrCb2RGB)
     return enhanced_image
 
+
 # Augment images
 def flip_left_right_with_box(image, label):
     """Horizontal flip of the image + label adaptation (x_center inverted)."""
-
     # Image
     img = tf.image.flip_left_right(image)
     # Box: x_center devient (1 - x_center). y, w, h ne changent pas.
@@ -77,6 +75,7 @@ def flip_left_right_with_box(image, label):
     new_label = tf.stack([label[0], 1.0 - label[1], label[2], label[3], label[4]])
     return img, new_label
 
+
 def flip_up_down_with_box(image, label):
     """Vertical flip of the image + label adaptation (y_center inverted)."""
 
@@ -84,6 +83,7 @@ def flip_up_down_with_box(image, label):
     # Box: y_center devient (1 - y_center)
     new_label = tf.stack([label[0], label[1], 1.0 - label[2], label[3], label[4]])
     return img, new_label
+
 
 def rot180_with_box(image, label):
     """180° rotation of the image + label adaptation (x and y inverted)."""
@@ -93,40 +93,13 @@ def rot180_with_box(image, label):
     new_label = tf.stack([label[0], 1.0 - label[1], 1.0 - label[2], label[3], label[4]])
     return img, new_label
 
+
 def add_noise(image: tf.Tensor) -> tf.Tensor:
     """Add random noise to the image."""
 
     noise = tf.random.normal(shape=tf.shape(image), mean=0.0, stddev=25.0, dtype=tf.float32)
     return tf.clip_by_value(tf.cast(image, tf.float32) + noise, 0, 255)
 
-# To be applied to a tf.data.Dataset using 'map',
-# see https://www.tensorflow.org/api_docs/python/tf/py_function
-@tf.py_function(Tout=tf.uint8)  # 8bit image
-def preprocess(eager_tensor) -> np.array:
-    """
-    Full preprocessing pipeline for an image.
-
-    Expected to be mapped to a ft.data.Dataset of EagerTensor.
-    """
-
-    # DO NOT MODIFY: Cast eager tensor into an OpenCV readable raw image
-    img = eager_tensor.numpy().astype("uint8")
-
-    # White balance first to avoid degradation from previous processing
-    white_balanced_img = white_balance(img)
-    processed_img = contrast_enhance(white_balanced_img)
-
-    return processed_img
-
-@tf.py_function(Tout=tf.uint8)  # 8bit image
-def resize(processed_img):
-
-    processed_img = processed_img.numpy().astype("uint8")
-    # Resize last in case it modifies too much for previous process
-    resized_img = cv.resize(processed_img,
-                            preprocessing_settings.PREPROCESS_IMG_SIZE,
-                            interpolation=cv.INTER_LINEAR)
-    return resized_img
 
 def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
     """Multiply the dataset by adapting the Bounding Box labels.
@@ -138,7 +111,6 @@ def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
     print("🔄 Augmentation du dataset (x8 par image)...")
 
     def _augment(img, label):
-
         label = tf.cast(label, tf.float32)
 
         # On fait les modifs des images ET des labels
@@ -157,3 +129,40 @@ def augment_preprocess(dataset: tf.data.Dataset) -> tf.data.Dataset:
         return tf.data.Dataset.from_tensor_slices((aug_imgs, aug_labs))
 
     return dataset.map(_augment)
+
+
+def preprocess_ds(dataset: tf.data.Dataset) -> tf.data.Dataset:
+    # To be applied to a tf.data.Dataset using 'map',
+    # see https://www.tensorflow.org/api_docs/python/tf/py_function
+    @tf.py_function(Tout=tf.uint8)  # 8bit image
+    def preprocess(eager_tensor) -> np.ndarray:
+        """Full preprocessing pipeline for an image.
+
+        Expected to be mapped to a ft.data.Dataset of EagerTensor.
+        """
+        # DO NOT MODIFY: Cast eager tensor into an OpenCV readable raw image
+        img = eager_tensor.numpy().astype("uint8")
+
+        # White balance first to avoid degradation from previous processing
+        white_balanced_img = white_balance(img)
+        processed_img = contrast_enhance(white_balanced_img)
+
+        return processed_img
+
+    return dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)
+
+
+def resize_ds(
+        dataset: tf.data.Dataset,
+        img_size: tuple[int, int],
+) -> tf.data.Dataset:
+    @tf.py_function(Tout=tf.uint8)  # 8bit image
+    def resize(processed_img):
+        processed_img = processed_img.numpy().astype("uint8")
+        # Resize last in case it modifies too much for previous process
+        resized_img = cv.resize(processed_img,
+                                img_size,
+                                interpolation=cv.INTER_LINEAR)
+        return resized_img
+
+    return dataset.map(resize, num_parallel_calls=tf.data.AUTOTUNE)

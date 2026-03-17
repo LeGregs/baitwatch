@@ -1,12 +1,14 @@
 """Web API."""
 import io
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, UploadFile
-from PIL import Image
 
-from baitwatch.settings import FishDetectionEnum
+from PIL import Image
+from fastapi import FastAPI, UploadFile
+
+from baitwatch.domains.prediction_result import PredictionResult
 from baitwatch.main import detect_fishes
 from baitwatch.registry import load_model
+from baitwatch.settings import FishDetectionEnum
 
 
 @asynccontextmanager
@@ -19,6 +21,7 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize resources
     app.state.models = {
         FishDetectionEnum.FONF: load_model(FishDetectionEnum.FONF),
+        FishDetectionEnum.IFSP: load_model(FishDetectionEnum.IFSP),
     }
     yield
     # Shutdown: Clean up resources
@@ -37,17 +40,27 @@ app = FastAPI(
 
 
 @app.post("/detect-fishes/")
-async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> None:
+async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> PredictionResult | dict[str, str]:
     """Request a fish detection on given image, according to the detection type.
 
     - **detection_type** (FishDetectionEnum): Type of detection to use.
     - **image_file** (UploadFile): image to detect fishes from.
     - Returns: Nothing for now
     """
-    contents = await image_file.read()
-    image = Image.open(io.BytesIO(contents))
+    # Ensure Enum object is used
+    detection_type = FishDetectionEnum(detection_type)
 
-    return detect_fishes(detection_type, image)
+    # Cast file into image file
+    contents = await image_file.read()
+    image = Image.open(io.BytesIO(contents)).convert('RGB')
+
+    # Get associated model
+    model = app.state.models.get(detection_type, None)
+    if model is None:
+        return {"error": f"No model found for detection type {detection_type.value}"}
+
+    results = detect_fishes(model, detection_type, image)
+    return PredictionResult.from_predict_result(results).model_dump(mode="json")
 
 
 @app.get("/ping/")

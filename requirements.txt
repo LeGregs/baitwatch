@@ -24,6 +24,7 @@ numpy==2.2.6
 pydantic==2.12.5
 pydantic-settings==2.13.1
 opencv-python==4.13.0.92
+pandas==2.3.3
 
 # Other reqs for dev
 absl-py==2.4.0
@@ -109,7 +110,6 @@ opt_einsum==3.4.0
 optree==0.19.0
 overrides==7.7.0
 packaging==26.0
-pandas==2.3.3
 pandocfilters==1.5.1
 parso==0.8.6
 pexpect==4.9.0

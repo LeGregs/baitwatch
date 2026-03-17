@@ -45,7 +45,7 @@ def load_model(
 
     If no model name is passed, return the last model in the path.
     """
-    print(f"⏳ Loading model...")
+    print(f"⏳ Loading model for {model_type.value}...")
     path = path / model_type.value
 
     if model_settings.MODEL_TARGET == "local":

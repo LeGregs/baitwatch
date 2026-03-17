@@ -1,12 +1,11 @@
 """Project Settings"""
 
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
 from pydantic import DirectoryPath
-
+from pydantic_settings import BaseSettings
 
 PROJECT_PATH = Path(__file__).absolute().parent.parent
 DATASET_NAME = "training_data_species_grouped"
@@ -23,7 +22,9 @@ class FishDetectionEnum(str, Enum):
     """
     FONF = "fonf"
     IFSP = "ifsp"
-    WAW = "waw"
+    # TODO: add support for WAW
+    # WAW = "waw"
+
 
 class DatasetSettings(BaseSettings):
     """Settings about dataset used for training."""
@@ -31,13 +32,16 @@ class DatasetSettings(BaseSettings):
     PROCESSED_DATA_PATH: DirectoryPath = PROJECT_PATH / "processed_data"
     # AUGMENTED_DATA_PATH = PROJECT_PATH / "augmented_data"
     ORIGINAL_SIZE: tuple[int, int] = (1080, 1920)  # Tensorflow: height width
-    CROP_IMG_SIZE: tuple[int, int] = (105, 256) # Tensorflow: height width
 
 
-class PreprocessingSettings(BaseSettings):
+class FonfSettings(BaseSettings):
     """Settings for preprocessing."""
     PREPROCESS_IMG_SIZE: tuple[int, int] = (256, 144)  # OpenCV: width height
 
+
+class IfspSettings(BaseSettings):
+    """Settings for preprocessing."""
+    CROP_IMG_SIZE: tuple[int, int] = (105, 256)  # Tensorflow: height width
 
 
 class ModelSettings(BaseSettings):
@@ -47,11 +51,12 @@ class ModelSettings(BaseSettings):
 
 
 class CloudSettings(BaseSettings):
-    """Settings about the google cloud project / buckets..."""
+    """Settings about the Google Cloud project / buckets..."""
     BUCKET_NAME: str = "baitwatch-bucket"
 
 
 dataset_settings = DatasetSettings()
-preprocessing_settings = PreprocessingSettings()
+fonf_settings = FonfSettings()
+ifsp_settings = IfspSettings()
 model_settings = ModelSettings()
 cloud_settings = CloudSettings()

@@ -5,17 +5,17 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import classification_report
 
-from baitwatch.settings import preprocessing_settings
+from baitwatch.settings import fonf_settings
 
 # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
-IMG_SIZE = preprocessing_settings.PREPROCESS_IMG_SIZE[::-1]
+IMG_SIZE = fonf_settings.PREPROCESS_IMG_SIZE[::-1]
 
-def build_model(INPUT_FORMAT = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
+def build_model(input_format = (*IMG_SIZE, 3), output_layer = (1, "sigmoid")):
     """
     Build a CNN model for fonf task.
     """
     # Imput layer
-    inputs  = keras.Input(shape=INPUT_FORMAT)
+    inputs  = keras.Input(shape=input_format)
 
     # Normalize images
     x = keras.layers.Rescaling(scale=1./255)(inputs)
@@ -71,30 +71,6 @@ def fonf_optimizer() -> keras.optimizers.Optimizer:
     lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 200, 0.96)
     optimizer = keras.optimizers.Adam(learning_rate=lr)
     return optimizer
-
-
-def compile_model(model,
-                  optimizer='rmsprop',
-                  loss = 'binary_crossentropy',
-                  metrics=['accuracy', 'recall']):
-    """
-    Compile le modèle
-
-    Args :
-        model: le modèle à compiler
-        optimizer: choix de l'optimiseur e.g. 'rmsprop', 'adam', 'sgd'...
-        metrics: les métriques à suivre pendant l'entraînement
-
-    Returns :
-        model: le modèle compilé
-    """
-
-    model.compile(
-        optimizer=optimizer,            # ajuste les poids
-        loss=loss,  # mesure l'erreur
-        metrics=metrics         # % de bonnes prédictions
-    )
-    return model
 
 
 def train_model(model,
@@ -187,9 +163,3 @@ def get_classification_report(
 
     return classification_report(y_val, y_pred)
 
-
-if __name__ == '__main__':
-    model = build_model()
-    model = compile_model(model)
-    history, model = train_model(model, X_train, y_train, X_val, y_val)
-    model.summary()
