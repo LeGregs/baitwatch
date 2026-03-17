@@ -15,17 +15,32 @@ reinstall_package:
 run_dl_data:
 	python -c 'from baitwatch.main import download_data; download_data()'
 
-run_preprocess:
-	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset()'
+run_preprocess_fonf:
+	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset("fonf")'
 
-run_train:
-	python -c 'from baitwatch.main import train; train()'
+run_preprocess_ifsp:
+	python -c 'from baitwatch.main import preprocess_dataset; preprocess_dataset("ifsp")'
 
-run_evaluate:
-	python -c 'from baitwatch.main import evaluate; evaluate()'
+run_train_fonf:
+	python -c 'from baitwatch.main import train; train("fonf")'
+
+run_train_ifsp:
+	python -c 'from baitwatch.main import train; train("ifsp")'
+
+run_evaluate_fonf:
+	python -c 'from baitwatch.main import evaluate; evaluate("fonf")'
+
+run_evaluate_ifsp:
+	python -c 'from baitwatch.main import evaluate; evaluate("ifsp")'
 
 run_cycle_fonf:
 	python -c 'from baitwatch.main import run_cycle; run_cycle("fonf")'
 
+run_cycle_ifsp:
+	python -c 'from baitwatch.main import run_cycle; run_cycle("ifsp")'
+
 run_report_fonf:
 	python -c 'from baitwatch.main import classification_report; classification_report("fonf")'
+
+run_report_ifsp:
+	python -c 'from baitwatch.main import classification_report; classification_report("ifsp")'
