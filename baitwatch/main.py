@@ -16,9 +16,8 @@ from tensorflow.keras import Model
 
 from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset
 from baitwatch.infra.registry import save_model, load_model
-from baitwatch.model import build_model, train_model, get_classification_report, fonf_optimizer
-from baitwatch.models import process_data, get_preprocess
-from baitwatch.plot_history import plot_history
+from baitwatch.models import process_data, get_preprocess, get_compiled_model
+from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
 from baitwatch.settings import dataset_settings, model_settings, FishDetectionEnum, fonf_settings, DATASET_NAME, \
     ifsp_settings
 
@@ -32,12 +31,6 @@ DETECTION_TYPE_TO_LABEL = {
 DETECTION_TYPE_TO_IMG_SIZE = {
     FishDetectionEnum.FONF: fonf_settings.PREPROCESS_IMG_SIZE[::-1],
     FishDetectionEnum.IFSP: ifsp_settings.CROP_IMG_SIZE,
-}
-
-# Defin output layers
-DETECTION_TYPE_TO_OUTPUT_LAYER = {
-    FishDetectionEnum.FONF: (1, "sigmoid"),
-    FishDetectionEnum.IFSP: (8, 'softmax'),
 }
 
 
@@ -71,7 +64,7 @@ def preprocess_data(task_type: FishDetectionEnum):
 
 def train(model_type: FishDetectionEnum):
     """Construit, compile et entraîne le modèle, puis sauvegarde + affiche les courbes."""
-    print(f"🏋️ Entraînement du modèle ({model_type})...")
+    print(f"🏋️ Train model({model_type})...")
     # Cast str as Enum object (from Make)
     model_type = FishDetectionEnum(model_type)
 
@@ -81,25 +74,10 @@ def train(model_type: FishDetectionEnum):
         label_mode=DETECTION_TYPE_TO_LABEL[model_type]
     )
 
-    optimizer = fonf_optimizer()
-    model = build_model(
-        input_format=(*DETECTION_TYPE_TO_IMG_SIZE[model_type], 3),
-        output_layer=DETECTION_TYPE_TO_OUTPUT_LAYER[model_type],
-    )
+    print(f"🛠️️ Building model {model_type}...")
+    model = get_compiled_model(model_type)
 
-    if model_type is FishDetectionEnum.FONF:
-        model.compile(
-            optimizer=optimizer,
-            loss='binary_crossentropy',
-            metrics=["accuracy", "recall", "precision", "AUC"],
-        )
-
-    if model_type is FishDetectionEnum.IFSP:
-        model.compile(
-            loss='categorical_crossentropy',
-            optimizer=optimizer,
-            metrics=["accuracy", "recall", "precision", "AUC"])
-
+    print("👟   Training model...")
     history, model = train_model(model, x_train_ds, validation_data=x_val_ds)
 
     print("💾 Saving model...")
