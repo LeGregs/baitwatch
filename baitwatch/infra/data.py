@@ -183,8 +183,6 @@ def get_processed_dataset(path: Path = dataset_settings.PROCESSED_DATA_PATH, *,
     else:
         label_mode = 'int'
 
-    # REMEMBER Prepocess with Opencv, which reverse order of image size compared to tensorflow used to load data
-
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                              labels="inferred",
                                                              shuffle=True,

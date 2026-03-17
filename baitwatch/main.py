@@ -24,6 +24,7 @@ from baitwatch.settings import dataset_settings, model_settings, fonf_settings, 
     ifsp_settings
 
 # Define image sizes
+# REMEMBER Preprocess with Opencv, which reverse order of image size compared to tensorflow used to load data
 DETECTION_TYPE_TO_IMG_SIZE = {
     FishDetectionEnum.FONF: fonf_settings.PREPROCESS_IMG_SIZE[::-1],
     FishDetectionEnum.IFSP: ifsp_settings.CROP_IMG_SIZE,
