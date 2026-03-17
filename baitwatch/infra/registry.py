@@ -5,7 +5,7 @@ from google.cloud import storage
 from tensorflow import keras
 
 from baitwatch.settings import model_settings, cloud_settings
-from baitwatch.domains.FishDetection import FishDetectionEnum
+from baitwatch.domains.fish_detection import FishDetectionEnum
 
 
 def save_model(

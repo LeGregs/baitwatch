@@ -14,7 +14,7 @@ from PIL import ImageFile
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 
-from baitwatch.domains.FishDetection import FishDetectionEnum
+from baitwatch.domains.fish_detection import FishDetectionEnum
 from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_dataset, get_images, get_labels, save_augmented_to_local
 from baitwatch.infra.registry import save_model, load_model
 from baitwatch.models import process_data, get_preprocess, get_compiled_model
