@@ -40,7 +40,7 @@ app = FastAPI(
 
 
 @app.post("/detect-fishes/")
-async def detect(detection_type: FishDetectionEnum, image_file: UploadFile):
+async def detect(detection_type: FishDetectionEnum, image_file: UploadFile) -> PredictionResult | dict[str, str]:
     """Request a fish detection on given image, according to the detection type.
 
     - **detection_type** (FishDetectionEnum): Type of detection to use.
