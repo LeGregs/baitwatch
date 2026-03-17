@@ -9,7 +9,8 @@ def build_bbox_dataframe(
         labels_dataset: tf.data.Dataset,
         img_size: tuple[int, int] = dataset_settings.ORIGINAL_SIZE,
 ) -> pd.DataFrame:
-    width, height = img_size
+    # BE CAREFUL EXPECT IMG SIZE TO BE IN TENSORFLOW FORMAT
+    height, width = img_size
     rows = []
     for idx, txt in enumerate(labels_dataset.as_numpy_iterator()):
         txt = txt.decode("utf-8").strip()
@@ -50,9 +51,11 @@ def crop_bb(labels_bb_df, img_dataset):
         width = bb_label.loc["width"]
         height = bb_label.loc["height"]
 
-        cropped_img.append(img_with_bb[
+        bounding_box = img_with_bb[
             int(center_y - height/2) : int(center_y + height/2) + 1,
-            int(center_x - width/2) : int(center_x + width/2) + 1,:])
+            int(center_x - width/2) : int(center_x + width/2) + 1,:]
+
+        cropped_img.append(bounding_box)
         class_bb.append(int(labels_bb_df.iloc[bb]["class_id"]))
 
     return cropped_img, class_bb
