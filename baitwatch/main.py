@@ -167,16 +167,17 @@ def save_augmented():
     corresponding to their respective model types and splits.
     """
     x_train, x_val, x_test = get_processed_dataset(dataset_settings.PROCESSED_DATA_PATH / FishDetectionEnum.IFSP.value,
-                                                   image_size=ifsp_settings.CROP_IMG_SIZE)
+                                                   image_size=ifsp_settings.CROP_IMG_SIZE,
+                                                   label_mode="int",  # Need int to save into 0, 1, ... folders (tensor otherwise)
+                                                   )
 
-    # Augment images
+    # Augment images, only need train
     x_train = augment_ds(x_train)
-    x_val = augment_ds(x_val)
-    x_test = augment_ds(x_test)
 
     # Save
     save_augmented_to_local(x_train, FishDetectionEnum.IFSP.value, 'train')
 
+    # Save non-augmented val and test for easier management during training
     save_augmented_to_local(x_val, FishDetectionEnum.IFSP.value, 'val')
 
     save_augmented_to_local(x_test, FishDetectionEnum.IFSP.value, 'test')
