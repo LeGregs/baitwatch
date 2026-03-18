@@ -66,7 +66,7 @@ def build_model() -> keras.models.Model:
 def get_optimizer() -> keras.optimizers.Optimizer:
     """Optimizer for IFSP training."""
     # Use an adaptative learning rate to ensure reliability of train
-    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 1000, 0.96)
+    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 200, 0.96)
     optimizer = keras.optimizers.Adam(learning_rate=lr)
     return optimizer
 
