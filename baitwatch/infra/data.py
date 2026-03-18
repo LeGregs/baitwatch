@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import tensorflow as tf
@@ -159,14 +160,18 @@ def save_image_dataset(
         image.save(path / str(label) / f"img_{index}.jpg")
 
 
-def get_processed_dataset(path: Path = dataset_settings.PROCESSED_DATA_PATH, *,
-                          image_size: tuple[int, int]) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
+def get_processed_dataset(
+        path: Path = dataset_settings.PROCESSED_DATA_PATH,
+        *,
+        image_size: tuple[int, int],
+        label_mode: Literal["int", "categorical", "auto"] = "auto",
+) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """Load preprocessed images into tf.data.Dataset with labels.
 
     Args:
         path: path of preprocessed data, with train, val, test folders
         image_size: tuple[int, int] size of image
-        label_mode: (optional) type of labels either 'int' for bi-class, 'categorical' for multi-classes
+        label_mode: (optional) type of labels either 'int' for bi-class, 'categorical' for multi-classes, default 'auto'
 
     Returns:
         X_train_ds, X_val_ds, X_test_ds tf.data.Dataset
@@ -175,13 +180,14 @@ def get_processed_dataset(path: Path = dataset_settings.PROCESSED_DATA_PATH, *,
     if not list(path.iterdir()):
         raise FileNotFoundError(f"No data found at {path}")
 
-    # Check one directory to get label mode: int for bi-class, categorical for multi class
-    # Don't forget to ignore hidden files
-    test_path = path / "train"
-    if len([f for f in test_path.iterdir() if not f.name.startswith('.')]) > 2:
-        label_mode = 'categorical'
-    else:
-        label_mode = 'int'
+    if label_mode == "auto":
+        # Check one directory to get label mode: int for bi-class, categorical for multi class
+        # Don't forget to ignore hidden files
+        test_path = path / "train"
+        if len([f for f in test_path.iterdir() if not f.name.startswith('.')]) > 2:
+            label_mode = 'categorical'
+        else:
+            label_mode = 'int'
 
     X_train_ds = tf.keras.utils.image_dataset_from_directory(path / "train",
                                                              labels="inferred",
