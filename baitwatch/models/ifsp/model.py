@@ -20,30 +20,29 @@ def build_model() -> keras.models.Model:
     x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
 
-    x = layers.Conv2D(32, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
+    x = layers.MaxPooling2D((2,2))(x)
+
+    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
     x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
 
     x = layers.MaxPooling2D((2,2))(x)
 
-    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
-    x = layers.BatchNormalization(momentum=0.99)(x)
-    x = layers.Dropout(0.1)(x)
-    x = layers.LeakyReLU(negative_slope=0.01)(x)
-
-    x = layers.Conv2D(64, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
     x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.Dropout(0.1)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
 
     x = layers.MaxPooling2D((2,2))(x)
 
-    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.Conv2D(256, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
     x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.Dropout(0.1)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
 
-    x = layers.Conv2D(128, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones")(x)
+    x = layers.MaxPooling2D((2,2))(x)
+
+    x = layers.Conv2D(512, kernel_size=3, kernel_initializer="he_uniform", bias_initializer="ones", padding="same")(x)
     x = layers.BatchNormalization(momentum=0.99)(x)
     x = layers.Dropout(0.1)(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)
@@ -54,8 +53,7 @@ def build_model() -> keras.models.Model:
     x = layers.Flatten()(x)                                   # aplatit en 1D
     x = layers.Dense(256, activation='relu')(x)
     x = layers.Dropout(0.1)(x)
-    x = layers.Dense(128, activation='relu')(x)
-    x = layers.Dropout(0.1)(x)              # couche dense pour apprendre des combinaisons de features
+    x = layers.Dense(64, activation='relu')(x)   # couche dense pour apprendre des combinaisons de features
 
     # Output layer
     outputs = layers.Dense(8, "softmax")(x)        # probabilité fish
@@ -68,7 +66,7 @@ def build_model() -> keras.models.Model:
 def get_optimizer() -> keras.optimizers.Optimizer:
     """Optimizer for IFSP training."""
     # Use an adaptative learning rate to ensure reliability of train
-    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 200, 0.96)
+    lr = keras.optimizers.schedules.ExponentialDecay(0.0003, 1000, 0.96)
     optimizer = keras.optimizers.Adam(learning_rate=lr)
     return optimizer
 

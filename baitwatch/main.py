@@ -19,7 +19,7 @@ from baitwatch.infra.data import dl_data, save_image_dataset, get_processed_data
 from baitwatch.infra.registry import save_model, load_model
 from baitwatch.models import process_data, get_preprocess, get_compiled_model
 from baitwatch.models.commons.augment import augment_ds
-from baitwatch.models.commons.model import train_model, get_classification_report, plot_history
+from baitwatch.models.commons.model import train_model, get_classification_report, plot_history, get_class_weights
 from baitwatch.settings import dataset_settings, model_settings, fonf_settings, DATASET_NAME, \
     ifsp_settings
 
@@ -77,7 +77,11 @@ def train(model_type: FishDetectionEnum, augmented: bool = False) -> None:
     model = get_compiled_model(model_type)
 
     print("👟   Training model...")
-    history, model = train_model(model, x_train_ds, validation_data=x_val_ds)
+    class_weights = None
+    if model_type == FishDetectionEnum.IFSP:
+        # Manage class unbalanced
+        class_weights = get_class_weights(x_train_ds, encoded=True)
+    history, model = train_model(model, x_train_ds, validation_data=x_val_ds, class_weights=class_weights)
 
     print("💾 Saving model...")
     save_model(model, model_type, model_settings.MODEL_LOCAL_PATH)
