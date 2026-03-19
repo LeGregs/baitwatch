@@ -520,53 +520,16 @@ pip install ultralytics
 
 ### Prepare the dataset configuration
 
-Since the Tassie BRUV annotations are **already in YOLO format**, no conversion is needed. Simply generate the `dataset.yaml` configuration file pointing to the raw label and image directories:
-
-```bash
-python baitwatch/data/prepare_yolo_config.py \
-    --image_dir raw_data/images \
-    --label_dir raw_data/labels \
-    --output raw_data/dataset.yaml
-```
-
-The resulting `dataset.yaml` follows the standard Ultralytics structure:
-
-```yaml
-path: raw_data
-train: images/train
-val: images/val
-test: images/test
-
-nc: <N_species>
-names: [<species_1>, <species_2>, ...]
-```
+Since the Tassie BRUV annotations are **already in YOLO format**, no conversion is needed.
 
 ### Fine-tune YOLO26
-
-```bash
-python baitwatch/models/yolo_wrapper.py \
-    --config configs/yolo_finetune.yaml \
-    --data raw_data/dataset.yaml \
-    --weights yolo26m.pt \
-    --epochs 100 \
-    --output_dir model/yolo
-```
 
 Key fine-tuning strategies applied:
 
 - **Frozen backbone** for the first N epochs, then end-to-end fine-tuning — avoids catastrophic forgetting on small datasets.
 - **Mosaic augmentation** enabled (YOLO26 default) — especially effective for rare classes with few training images.
 - **Class-weighted loss** — rare species receive higher gradient contribution during training.
-
-### Inference with the fine-tuned YOLO model
-
-```bash
-python -m baitwatch.inference_yolo \
-    --model model/yolo/weights/best.pt \
-    --image_dir path/to/new/images \
-    --output_csv yolo_predictions.csv \
-    --conf_threshold 0.3
-```
+- **Augmented images** — use the augmented image from BRUV dataset to fine-tuned the YOLO26 model.
 
 ### Comparison: Custom CNN pipeline vs. YOLO26
 
