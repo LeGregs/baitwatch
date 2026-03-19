@@ -424,7 +424,7 @@ Class imbalance is the central challenge for IFSP: *Scorpaeniformes* (dominated 
 
 **Training level** — `class_weight` is passed to `model.fit()` during IFSP training, computed from inverse class frequencies. This penalises the model more heavily for misclassifying rare species, compensating for the dominant presence of *Scorpaeniformes*.
 
-**Loss level** — `CategoricalCrossentropy` for IFSP; `BinaryCrossentropy` for FONF.
+**Loss level** — `BinaryCrossentropy` for FONF.; `CategoricalCrossentropy` for IFSP
 
 **Evaluation level** — Per-class F1 and recall are always reported alongside overall accuracy, so strong performance on the dominant class cannot mask failure on rare ones.
 
