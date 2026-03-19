@@ -582,12 +582,19 @@ python -m baitwatch.inference_yolo \
 
 ### Results — YOLO26 Fine-tuned
 
-| Metric | Val | Test |
-|---|---|---|
-| mAP@0.5 | — | — |
-| mAP@0.5:0.95 | — | — |
-| Rare Species Recall | — | — |
-
+Model: `YOLO26n` (fused) — 122 layers, 2,376,396 parameters, 5.2 GFLOPs. Inference speed: 38.6ms/image (CPU).
+ 
+| Class | Images | Instances | P | R | mAP@0.5 | mAP@0.5:0.95 |
+|---|---|---|---|---|---|---|
+| **All** | **1148** | **2834** | **0.696** | **0.584** | **0.629** | **0.397** |
+| Carcharhiniformes | 126 | 126 | 0.712 | 0.714 | 0.722 | 0.395 |
+| Chyrosophyrs auratus | 146 | 152 | 0.833 | 0.888 | 0.901 | 0.663 |
+| Moridae | 72 | 90 | 0.746 | 0.457 | 0.520 | 0.306 |
+| Perciformes_sandy | 58 | 58 | 0.430 | 0.310 | 0.346 | 0.167 |
+| Perciformes_silver | 150 | 336 | 0.627 | 0.595 | 0.614 | 0.333 |
+| Ray | 30 | 30 | 0.626 | 0.567 | 0.622 | 0.454 |
+| Scorpaeniformes | 446 | 1983 | 0.760 | 0.558 | 0.637 | 0.388 |
+| Tetradontiformes | 59 | 59 | 0.831 | 0.585 | 0.672 | 0.469 |
 ---
 
 ## 🔬 Stretch Objective: Grad-CAM Visualisation *(not met)*
