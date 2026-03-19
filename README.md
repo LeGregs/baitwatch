@@ -81,16 +81,16 @@ The Tassie BRUV dataset contains annotated underwater images collected using ste
 
 The 19 raw species observed in the dataset are grouped into **8 classification classes** used for model training, after merging taxa with low annotation counts into morphologically similar higher-order groups. The dominant class by a large margin is the **Southern Sand Flathead** (*Platycephalus bassensis*), a camouflaged benthic species that accounts for ~73% of all annotations.
 
-| Class ID | Class Name | Common Name | Approx. Annotations | Notes |
-|---|---|---|---|---|
-| 0 | `Carcharhiniformes` | Ground sharks | — | — |
-| 1 | `Chyrosophyrs auratus` | Australasian Snapper | — | — |
-| 2 | `Moridae` | Morid cods | — | — |
-| 3 | `Perciformes_sandy` | Sandy-habitat perch-like fishes | — | — |
-| 4 | `Perciformes_silver` | Silver perch-like fishes | — | — |
-| 5 | `Ray` | Rays | — | — |
-| 6 | `Scorpaeniformes` | Scorpionfish & flatheads | — | — |
-| 7 | `Tetradontiformes` | Pufferfish & filefish | — | — |
+| Class ID | Class Name | Common Name | Approx. Annotations (train split) | Notes |
+|---|---|---|-----------------------------------|-------|
+| 0 | `Carcharhiniformes` | Ground sharks | 168                               | —     |
+| 1 | `Chyrosophyrs auratus` | Australasian Snapper | 210                               | —     |
+| 2 | `Moridae` | Morid cods | 67                                | —     |
+| 3 | `Perciformes_sandy` | Sandy-habitat perch-like fishes | 87                                | —     |
+| 4 | `Perciformes_silver` | Silver perch-like fishes | 292                               | —     |
+| 5 | `Ray` | Rays | 93                                | —     |
+| 6 | `Scorpaeniformes` | Scorpionfish & flatheads | 2660                              | —     |
+| 7 | `Tetradontiformes` | Pufferfish & filefish | 70                                | —     |
 
 > **Note:** Class names and IDs match those defined in `training_data_species_grouped/data.yaml`. Refer to the paper *"The Motion Picture"* (Maslen et al., 2025) for the full grouping rationale.
 
