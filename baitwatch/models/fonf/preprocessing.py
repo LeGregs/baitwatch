@@ -16,7 +16,7 @@ def process_data_fonf(
 
 def preprocess_fonf(dataset: Dataset) -> Dataset:
     dataset = preprocess_ds(dataset)
-    dataset = resize_ds(dataset, img_size=fonf_settings.PREPROCESS_IMG_SIZE)
+    # dataset = resize_ds(dataset, img_size=fonf_settings.PREPROCESS_IMG_SIZE)
     return dataset
 
 
