@@ -30,6 +30,9 @@ run_train_fonf:
 run_train_ifsp:
 	python -c 'from baitwatch.main import train; train("ifsp")'
 
+run_train_ifsp_augmented:
+	python -c 'from baitwatch.main import train; train("ifsp", augmented=True)'
+
 run_evaluate_fonf:
 	python -c 'from baitwatch.main import evaluate; evaluate("fonf")'
 

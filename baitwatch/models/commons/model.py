@@ -1,4 +1,7 @@
+from collections import Counter
+
 import numpy as np
+import tensorflow as tf
 from matplotlib import pyplot as plt
 from sklearn.metrics import classification_report
 from tensorflow import keras
@@ -12,6 +15,7 @@ def train_model(model,
                 batch_size: int = 32,
                 epochs: int = 50,
                 patience: int = 5,
+                class_weights: dict = None,
                 ) -> tuple[dict, keras.Model]:
     """
     Entraîne le modèle et
@@ -46,7 +50,8 @@ def train_model(model,
         validation_data=validation_data,  # données de validation
         epochs=epochs,  # maximum 50 epochs
         batch_size=batch_size,  # 32 images par batch
-        callbacks=[early_stopping]  # arrête automatiquement si plateau
+        callbacks=[early_stopping],  # arrête automatiquement si plateau
+        class_weight=class_weights,
     )
     return history, model
 
@@ -132,3 +137,19 @@ def plot_history(history):
     plt.show()
 
     print("✅ Courbes affichées")
+
+
+def get_class_weights(dataset: Dataset, encoded:bool = False) -> dict:
+    # Extract class labels
+    class_labels = []
+    for _, labels in dataset.unbatch():
+        if encoded:
+            # Convert one-hot label to class index
+            labels = tf.argmax(labels, axis=-1)
+        class_labels.append(labels.numpy())
+
+    # Compute class weights
+    counter = Counter(class_labels)
+    max_count = float(max(counter.values()))
+    class_weights = {class_id: max_count / count for class_id, count in counter.items()}
+    return class_weights
